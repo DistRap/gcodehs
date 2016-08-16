@@ -23,3 +23,4 @@ main = do
       >-> P.map (replaceY 3.14)
       >-> P.map (addReplaceZ 48)
       >-> P.map ppGCodeLine
+      >-> P.stdoutLn
