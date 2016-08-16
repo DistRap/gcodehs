@@ -45,7 +45,7 @@ flags = Flags
     <*> switch ( long "pretty" <> short 'p' <> help "Pretty output")
     <*> switch ( long "analyze" <> short 'a' <> help "Analyze GCode")
 
-main = do
+main =
     execParser opts >>= run
     where
       opts = info (helper <*> flags)
@@ -54,34 +54,30 @@ main = do
        <> header "gcodehs - GCode processor" )
 
 run :: Flags -> IO ()
-run Flags{..} = do
+run Flags{..} =
     if analyze
         then do
             r <- foldedpipe input analyzefold
             print r
-        else do
-            case output of
+        else case output of
               "" -> gcodepipe input $ fmt json pretty >-> B.stdout
-              _  -> do
-                  IO.withFile output IO.WriteMode $ \outhandle ->
-                    gcodepipe input $ fmt json pretty >-> B.toHandle outhandle
+              _  -> IO.withFile output IO.WriteMode $ \outhandle ->
+                      gcodepipe input $ fmt json pretty >-> B.toHandle outhandle
 
 bufsize = 1024
 
 parseProducer handle = PA.parsed parseGCodeLine (B.hGetSome bufsize handle)
 
-gcodepipe filepath tail = do
+gcodepipe filepath tail =
   IO.withFile filepath IO.ReadMode $ \handle ->
     runSafeT . runEffect $
       (() <$  parseProducer handle)
       >-> tail
 
-foldedpipe filepath fold = do
-  r <- IO.withFile filepath IO.ReadMode $ \handle ->
+foldedpipe filepath fold =
+  IO.withFile filepath IO.ReadMode $ \handle ->
       runSafeT . runEffect $
         fold (() <$  parseProducer handle)
-
-  return r
 
 analyzefold = P.fold step 0 id
   where step x a = x + travel a
@@ -97,7 +93,7 @@ fmt False False = P.map ppGCodeLineCompact >-> P.map (BS.pack . (++"\n"))
 -- doesn't work, probably due to bad FromJSON for maps
 readjsonmain = do
   f <- BL.readFile "a.json"
-  IO.putStrLn $ Prelude.show $ (decode f :: Maybe GCode)
+  print (decode f :: Maybe GCode)
 
 -- mmaped version, requires pipes-bytestring-mmap
 --main' = do

@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
 module Data.GCode.Types (
@@ -78,7 +77,7 @@ instance ToJSON Code
 instance FromJSON Code
 
 instance ToJSON v => ToJSON (M.Map ParamDesignator v) where
-  toJSON = toJSON . M.mapKeys (show)
+  toJSON = toJSON . M.mapKeys show
 
 instance FromJSON v => FromJSON (M.Map ParamDesignator v) where
   parseJSON v = convert <$> parseJSON v
@@ -86,7 +85,7 @@ instance FromJSON v => FromJSON (M.Map ParamDesignator v) where
             convert =  M.fromList . map (\(x,y) -> (param $ T.head x,y)) . M.toList
 
 instance ToJSON v => ToJSON (M.Map AxisDesignator v) where
-  toJSON = toJSON . M.mapKeys (show)
+  toJSON = toJSON . M.mapKeys show
 
 instance FromJSON v => FromJSON (M.Map AxisDesignator v) where
   parseJSON v = convert <$> parseJSON v

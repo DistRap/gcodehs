@@ -15,10 +15,10 @@ import Data.Either
 lskip = skipWhile (inClass " \t")
 between open close p = do{ open; x <- p; close; return x }
 
-isEndOfLine_chr :: Char -> Bool
-isEndOfLine_chr '\n' = True
-isEndOfLine_chr '\r' = True
-isEndOfLine_chr _ = False
+isEndOfLineChr :: Char -> Bool
+isEndOfLineChr '\n' = True
+isEndOfLineChr '\r' = True
+isEndOfLineChr _ = False
 
 parseLead = do
     a <- satisfy $ inClass "GMTPFS"
@@ -64,18 +64,17 @@ parseCode = do
 parseComment' = do
     t <- many $ between (lskip *> char '(') (char ')' <* lskip) $ takeWhile1 (/=')')
     -- semiclone prefixed comments
-    semisep <- option "" $ char ';' *> takeWhile (not . isEndOfLine_chr)
-    rest <- takeWhile (not . isEndOfLine_chr)
+    semisep <- option "" $ char ';' *> takeWhile (not . isEndOfLineChr)
+    rest <- takeWhile (not . isEndOfLineChr)
     return $ B.concat $ t ++ [semisep, rest]
 
-parseComment = do
-    Comment <$> parseComment'
+parseComment = Comment <$> parseComment'
 
 parseOther = do
-    a <- takeWhile (not . isEndOfLine_chr)
+    a <- takeWhile (not . isEndOfLineChr)
     return $ Other a
 
-parseCodeParts = do
+parseCodeParts =
            parseCode
       <|>  parseComment
       <|>  parseOther
@@ -83,7 +82,6 @@ parseCodeParts = do
 parseGCodeLine = between lskip lskip parseCodeParts <* endOfLine
 
 parseGCode :: Parser GCode
-parseGCode = do
-      many1 parseGCodeLine
+parseGCode = many1 parseGCodeLine
 
 parseOnlyGCode = parseOnly parseGCode

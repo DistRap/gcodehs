@@ -35,10 +35,10 @@ hasParam a _ = False
 
 hasFeedrate = hasParam F
 
-gcodes codes = filter isG codes
-mcodes codes = filter isM codes
-rapids codes = filter isRapid codes
-moves  codes = filter isMove codes
+gcodes = filter isG
+mcodes = filter isM
+rapids = filter isRapid
+moves  = filter isMove
 
 replaceClass newclass Code{..} = Code newclass code sub axes params comment
 replaceClass _ x = x
@@ -50,7 +50,7 @@ replaceAxis _ _ c@Code{..} = c
 
 addReplaceAxis de val Code{..} = Code cls code sub (newaxes axes) params comment
   where
-    newaxes old = M.insert de val old
+    newaxes = M.insert de val
 addReplaceAxis _ _ x = x
 
 replaceX = replaceAxis X
@@ -68,7 +68,7 @@ replaceParam _ _ c@Code{..} = c
 
 addReplaceParam de val Code{..} = Code cls code sub axes (newparams params) comment
   where
-    newparams old = M.insert de val old
+    newparams = M.insert de val
 addReplaceParam _ _ x = x
 
 replaceFeedrate = replaceParam F

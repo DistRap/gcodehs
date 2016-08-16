@@ -1,12 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Data.GCode (
-    module Data.GCode.Parse
-  , module Data.GCode.Pretty
-  , module Data.GCode.Types
-  , module Data.GCode.Utils
-  ) where
-
-import Data.GCode.Types
-import Data.GCode.Parse
-import Data.GCode.Pretty
-import Data.GCode.Utils
+module Data.GCode (module X) where
+import Data.GCode.Types as X
+import Data.GCode.Parse as X
+import Data.GCode.Pretty as X
+import Data.GCode.Utils as X
