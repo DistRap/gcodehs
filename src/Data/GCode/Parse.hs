@@ -1,3 +1,6 @@
+{-| GCode parsing functions
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 module Data.GCode.Parse (parseGCode, parseGCodeLine, parseOnlyGCode) where
 
@@ -7,10 +10,22 @@ import Prelude hiding (take, takeWhile, mapM)
 import Control.Applicative
 import qualified Data.ByteString as B
 import Data.Attoparsec.ByteString.Char8
-import Debug.Trace
 import qualified Data.Map.Strict as M
 
-import Data.Either
+import Data.Either (lefts, rights)
+
+-- |Parse single line of G-code into 'Code'
+parseGCodeLine :: Parser Code
+parseGCodeLine = between lskip lskip parseCodeParts <* endOfLine
+
+-- |Parse lines of G-code into 'GCode'
+parseGCode :: Parser GCode
+parseGCode = many1 parseGCodeLine
+
+-- |Parse lines of G-code returning either parsing error or 'GCode'
+parseOnlyGCode :: B.ByteString -> Either String GCode
+parseOnlyGCode = parseOnly parseGCode
+
 
 lskip = skipWhile (inClass " \t")
 between open close p = do{ open; x <- p; close; return x }
@@ -78,10 +93,3 @@ parseCodeParts =
            parseCode
       <|>  parseComment
       <|>  parseOther
-
-parseGCodeLine = between lskip lskip parseCodeParts <* endOfLine
-
-parseGCode :: Parser GCode
-parseGCode = many1 parseGCodeLine
-
-parseOnlyGCode = parseOnly parseGCode

@@ -1,3 +1,9 @@
+{-| GCode types
+
+This module exports types for constructing 'Code' values
+
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -22,13 +28,37 @@ import Data.Aeson
 import GHC.Generics
 import qualified Data.Map.Strict as M
 
-data Class = G | M | T | StP | StF | StS
-  deriving (Generic, Show, Enum, Eq, Ord)
-data AxisDesignator = X | Y | Z | A | B | C | E | L
-  deriving (Generic, Show, Enum, Eq, Ord)
-data ParamDesignator = S | P | F
+-- | Code class
+data Class =
+    G   -- ^ G-code
+  | M   -- ^ M-code
+  | T   -- ^ T-code (temperature)
+  | StP -- ^ Stand-alone P-code
+  | StF -- ^ Stand-alone F-code
+  | StS -- ^ Stand-alone S-code
   deriving (Generic, Show, Enum, Eq, Ord)
 
+-- | Axis letter
+data AxisDesignator =
+    X -- ^ X-axis
+  | Y -- ^ Y-axis
+  | Z -- ^ Z-axis
+  | A -- ^ A-axis
+  | B -- ^ B-axis
+  | C -- ^ C-axis
+  | E -- ^ Extruder axis
+  | L
+  deriving (Generic, Show, Enum, Eq, Ord)
+
+-- | Param letter
+data ParamDesignator =
+    S -- ^ S parameter - usually spindle RPM
+  | P -- ^ P parameter
+  | F -- ^ S parameter - usually feedrate
+  deriving (Generic, Show, Enum, Eq, Ord)
+
+-- |Convert 'Char' representation of a code to its 'Class'
+codecls :: Char -> Class
 codecls 'G' = G
 codecls 'M' = M
 codecls 'T' = T
@@ -36,6 +66,8 @@ codecls 'P' = StP
 codecls 'F' = StF
 codecls 'S' = StS
 
+-- |Convert 'Char' representation of an axis to its 'AxisDesignator'
+axis :: Char -> AxisDesignator
 axis 'X' = X
 axis 'Y' = Y
 axis 'Z' = Z
@@ -45,26 +77,32 @@ axis 'C' = C
 axis 'E' = E
 axis 'L' = L
 
+-- |Convert 'Char' representation of a param to its 'ParamDesignator'
+param :: Char -> ParamDesignator
 param 'S' = S
 param 'P' = P
 param 'F' = F
 
+-- | Map of 'AxisDesignator' to 'Double'
 type Axes = M.Map AxisDesignator Double
+
+-- | Map of 'ParamDesignator' to 'Double'
 type Params = M.Map ParamDesignator Double
 
+-- | List of 'Code's
 type GCode = [Code]
 
 data Code =
     Code {
-        cls :: Class
-      , code :: Int
-      , sub :: Int
-      , axes :: Axes
-      , params :: Params
-      , comment :: B.ByteString
+        cls :: Class            -- ^ Code 'Class' (M in M5)
+      , code :: Int             -- ^ Code value (81 in G81)
+      , sub :: Int              -- ^ Code subcode (1 in G92.1)
+      , axes :: Axes            -- ^ Code 'Axes'
+      , params :: Params        -- ^ Code 'Params'
+      , comment :: B.ByteString -- ^ Comment following this Code
     }
-  | Comment B.ByteString
-  | Other B.ByteString
+  | Comment B.ByteString        -- ^ Standalone comment
+  | Other B.ByteString          -- ^ Parser unhandled lines (should contain blank lines only)
   deriving (Generic, Show, Eq, Ord)
 
 instance ToJSON ParamDesignator

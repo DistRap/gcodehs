@@ -1,3 +1,10 @@
+{-| GCode pretty-printing functions
+
+Please do note that these are extremely slow as they do conversion
+from ByteStrings to Text and vice-verse. Float formatting is probably
+not the fastest as well. Colorfull versions are especially slow.
+
+-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Data.GCode.Pretty(ppGCode, ppGCodeLine, ppGCodeCompact, ppGCodeLineCompact) where
@@ -11,9 +18,20 @@ import Formatting.ShortFormatters
 import Text.PrettyPrint.ANSI.Leijen
 import Data.GCode.Types
 
+-- |Pretty-print 'GCode' using colors
+ppGCode :: GCode -> String
 ppGCode res = displayS (renderPretty 0.4 80 (ppGCode' res)) ""
+
+-- |Pretty-print single 'Code' using colors
+ppGCodeLine :: Code -> String
 ppGCodeLine res = displayS (renderPretty 0.4 80 (ppCode res)) ""
+
+-- |Pretty-print 'GCode' without colors
+ppGCodeCompact :: GCode -> String
 ppGCodeCompact res = displayS (renderCompact (ppGCode' res)) ""
+
+-- |Pretty-print single 'Code' without colors
+ppGCodeLineCompact :: Code -> String
 ppGCodeLineCompact res = displayS (renderCompact (ppCode res)) ""
 
 ppList pp x = hsep $ map pp x
