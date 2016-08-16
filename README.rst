@@ -13,6 +13,14 @@ Installing
 Usage
 -----
 
+To pretty-print `sample.gcode`::
+
+  gcodehs -p -i sample.gcode
+
+To parse to JSON::
+
+  gcodehs -j -i sample.gcode
+
 See `gcodehs --help` for usage information.
 
 Examples
@@ -53,6 +61,9 @@ to text but we do have colors!
 
 Fast pretty printer is needed that operates
 with ByteStrings directly.
+
+JSON support is only experimental, output is pretty ugly and
+fromJSON doesn't work, probably bad fromJSON instance for Axes/Params mapdoesn't work, probably bad fromJSON instance for Axes/Params maps.
 
 Bash completion
 ---------------

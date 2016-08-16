@@ -6,8 +6,10 @@ G21 ( Units == Millimeters. )
 
 G90 ( Absolute coordinates. )
 G00 Z2.00000
+S30000
 
 G00 X2.05580 Y31.49440 F9000 ( rapid move to begin. )
+F200
 G01 Z-0.05000
 G01 X2.05580 Y31.49440 F600.00000
 G01 X2.28440 Y31.34200 F600.00000
