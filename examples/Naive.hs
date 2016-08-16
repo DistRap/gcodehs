@@ -1,4 +1,4 @@
-import GCode
+import Data.GCode
 
 import qualified System.IO as IO
 import qualified System.Environment as E

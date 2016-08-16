@@ -1,4 +1,4 @@
-import GCode
+import Data.GCode
 
 import Pipes
 import Pipes.Attoparsec as PA

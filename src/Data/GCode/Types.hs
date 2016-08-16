@@ -2,7 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
-module GCode.Types (
+module Data.GCode.Types (
       Class(..)
     , AxisDesignator(..)
     , ParamDesignator(..)

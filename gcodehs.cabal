@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     GCode, GCode.Types, GCode.Parse, GCode.Pretty, GCode.Utils
+  exposed-modules:     Data.GCode, Data.GCode.Types, Data.GCode.Parse, Data.GCode.Pretty, Data.GCode.Utils
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , attoparsec
@@ -33,12 +33,9 @@ executable gcodehs
   build-depends:       base
                      , aeson
                      , attoparsec
-                     , ansi-wl-pprint
                      , bytestring
                      , gcodehs
                      , text
-                     , formatting
-                     , turtle
                      , pipes
                      , pipes-aeson
                      , pipes-attoparsec

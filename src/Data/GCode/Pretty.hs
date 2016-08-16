@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
-module GCode.Pretty(ppGCode, ppGCodeLine, ppGCodeCompact, ppGCodeLineCompact) where
+module Data.GCode.Pretty(ppGCode, ppGCodeLine, ppGCodeCompact, ppGCodeLineCompact) where
 
 import Data.ByteString.Char8 (pack, unpack)
 import qualified Data.Text as T
@@ -9,7 +9,7 @@ import Formatting (sformat)
 import Formatting.ShortFormatters
 
 import Text.PrettyPrint.ANSI.Leijen
-import GCode.Types
+import Data.GCode.Types
 
 ppGCode res = displayS (renderPretty 0.4 80 (pp_gcode res)) ""
 ppGCodeLine res = displayS (renderPretty 0.4 80 (pp_code res)) ""

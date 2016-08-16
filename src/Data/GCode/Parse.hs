@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-module GCode.Parse (parseGCode, parseGCodeLine, parseOnlyGCode) where
+module Data.GCode.Parse (parseGCode, parseGCodeLine, parseOnlyGCode) where
 
-import GCode.Types
+import Data.GCode.Types
 
 import Prelude hiding (take, takeWhile, mapM)
 import Control.Applicative

@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
-module GCode.Utils where
+module Data.GCode.Utils where
 
-import GCode.Types
+import Data.GCode.Types
 import qualified Data.Map.Strict as M
 
 travel Code{cls=G, ..} = M.foldl (+) 0 axes

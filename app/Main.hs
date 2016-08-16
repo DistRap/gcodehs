@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import GCode
+import Data.GCode
 
 import Prelude hiding (readFile, putStrLn)
 
