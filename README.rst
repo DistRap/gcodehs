@@ -7,8 +7,8 @@ Installing
 * Install stack https://docs.haskellstack.org/en/stable/README/
 * git clone https://github.com/hackerspace/gcodehs/
 * cd gcodehs
-* stack build gcodehs
-* stack install gcodehs
+* stack build
+* stack install
 
 Usage
 -----
