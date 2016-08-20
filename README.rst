@@ -76,3 +76,10 @@ or sourcing directly::
 
   source <(gcodehs --bash-completion-script `which gcodehs`)
 
+Profiling
+---------
+
+Build with profiling enabled::
+
+  stack build --profile
+  stack exec -- gcodehs +RTS -p -RTS -p -i sample.gcode
