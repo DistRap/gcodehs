@@ -85,3 +85,4 @@ ppCode Code{..} =
     <> ppComment comment
 ppCode (Comment x) = ppComment' x
 ppCode (Other x) = dullred $ text $ unpack x
+{-# INLINE ppCode #-}

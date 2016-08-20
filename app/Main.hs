@@ -80,7 +80,7 @@ foldedpipe filepath fold =
         fold (() <$  parseProducer handle)
 
 analyzefold = P.fold step 0 id
-  where step x a = x + travel a
+  where step x a = x + 1 -- travel a
 
 --analyzefold' = P.fold step 0 id
 --  where step x a | isG a = x + 1

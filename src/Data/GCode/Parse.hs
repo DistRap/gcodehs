@@ -27,7 +27,7 @@ parseOnlyGCode :: B.ByteString -> Either String GCode
 parseOnlyGCode = parseOnly parseGCode
 
 
-lskip = skipWhile (inClass " \t")
+lskip = skipWhile (\x -> x == ' ' || x == '\t')
 between open close p = do{ open; x <- p; close; return x }
 
 isEndOfLineChr :: Char -> Bool
