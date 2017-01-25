@@ -12,31 +12,57 @@ module Data.GCode.Pretty(ppGCode, ppGCodeLine, ppGCodeCompact, ppGCodeLineCompac
 import Data.ByteString.Char8 (pack, unpack)
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
-import Formatting (sformat)
-import Formatting.ShortFormatters
+import Data.Maybe
 
 import Text.PrettyPrint.ANSI.Leijen
 import Data.GCode.Types
+import Data.GCode.Utils
+
+import Data.Double.Conversion.Text
+
+import Formatting (sformat)
+import Formatting.ShortFormatters
 
 -- |Pretty-print 'GCode' using colors
 ppGCode :: GCode -> String
-ppGCode res = displayS (renderPretty 0.4 80 (ppGCode' res)) ""
+ppGCode = ppGCodeStyle defaultStyle
+
+-- |Pretty-print 'GCode' using colors with custom floating precision width
+ppGCodeStyle :: Style -> GCode -> String
+ppGCodeStyle style res = displayS (renderPretty 0.4 80 (ppGCode' style res)) ""
 
 -- |Pretty-print single 'Code' using colors
 ppGCodeLine :: Code -> String
-ppGCodeLine res = displayS (renderPretty 0.4 80 (ppCode res)) ""
+ppGCodeLine = ppGCodeLineStyle defaultStyle
+
+-- |Pretty-print single 'Code' using colors with custom floating precision width
+ppGCodeLineStyle :: Style -> Code -> String
+ppGCodeLineStyle style res = displayS (renderPretty 0.4 80 (ppCode style res)) ""
 
 -- |Pretty-print 'GCode' without colors
 ppGCodeCompact :: GCode -> String
-ppGCodeCompact res = displayS (renderCompact (ppGCode' res)) ""
+ppGCodeCompact = ppGCodeCompactStyle defaultStyle
+
+-- |Pretty-print 'GCode' without colors with custom floating precision width
+ppGCodeCompactStyle :: Style -> GCode -> String
+ppGCodeCompactStyle style res = displayS (renderCompact (ppGCode' style res)) ""
 
 -- |Pretty-print single 'Code' without colors
 ppGCodeLineCompact :: Code -> String
-ppGCodeLineCompact res = displayS (renderCompact (ppCode res)) ""
+ppGCodeLineCompact = ppGCodeLineCompactStyle defaultStyle
+
+-- |Pretty-print single 'Code' without colors with custom floating precision width
+ppGCodeLineCompactStyle :: Style -> Code -> String
+ppGCodeLineCompactStyle style res = displayS (renderCompact (ppCode style res)) ""
 
 ppList pp x = hsep $ map pp x
 
-ppGCode' = vsep . map ppCode
+ppGCode' style = vsep . map (ppCode style)
+
+ppMaybe pp (Just x) = pp x
+ppMaybe pp Nothing = empty
+
+ppMaybeClass = ppMaybe ppClass
 
 ppClass G = yellow $ text "G"
 ppClass M = red $ text "M"
@@ -45,14 +71,17 @@ ppClass StP = red $ text "P"
 ppClass StF = red $ text "F"
 ppClass StS = red $ text "S"
 
---codecolor Code{..} = cc cls code
+ccMaybes (Just cls) (Just num) = cc cls num
+ccMaybes _ _ = id
+
 cc G 0 = dullyellow
 cc G 1 = yellow
 cc _ _ = red
 
-ppAxis (des, val) =
+ppAxis style (des, val) =
        bold (axisColor des $ text $ show des)
-    <> cyan (text $ T.unpack $ sformat sf val)
+    <> cyan (text $ T.unpack $ sformat sf (roundprec 6 val))
+
 
 axisColor X = red
 axisColor Y = green
@@ -62,27 +91,28 @@ axisColor B = green
 axisColor C = blue
 axisColor E = magenta
 
-ppAxes [] = empty
-ppAxes x = space <> ppList ppAxis x
+ppAxes _ [] = empty
+ppAxes style x = space <> ppList (ppAxis style) x
 
-ppParam (des, val) =
+ppParam style (des, val) =
        bold (blue $ text $ show des)
-    <> white (text $ T.unpack $ sformat sf val)
+    <> white (text $ T.unpack $ toPrecision (stylePrecision style) val)
 
-ppParams [] = empty
-ppParams x = space <> ppList ppParam x
+ppParams _ [] = empty
+ppParams style x = space <> ppList (ppParam style) x
 
 ppComment "" = empty
 ppComment  c = space <> ppComment' c
 ppComment' "" = empty
 ppComment' c = dullwhite $ parens $ text $ unpack c
 
-ppCode Code{..} =
-       cc cls code ( bold $ ppClass cls)
-    <> cc cls code ( text $ show code)
-    <> ppAxes (M.toList axes)
-    <> ppParams (M.toList params)
-    <> ppComment comment
-ppCode (Comment x) = ppComment' x
-ppCode (Other x) = dullred $ text $ unpack x
+ppCode style Code{..} =
+       ccMaybes codeCls codeNum ( bold $ ppMaybeClass codeCls)
+    <> ccMaybes codeCls codeNum ( ppMaybe (text . show) codeNum)
+    <> ppAxes style (M.toList codeAxes)
+    <> ppParams style (M.toList codeParams)
+    <> ppComment codeComment
+ppCode _ (Comment x) = ppComment' x
+ppCode _ (Other x) = dullred $ text $ unpack x
+ppCode _ (Empty) = empty
 {-# INLINE ppCode #-}

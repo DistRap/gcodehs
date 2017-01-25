@@ -36,16 +36,19 @@ isEndOfLineChr '\r' = True
 isEndOfLineChr _ = False
 
 parseLead = do
-    a <- satisfy $ inClass "GMTPFS"
+    a <- satisfy $ (\c -> c == 'G' || c == 'M' || c == 'T' || c == 'P' || c == 'F' || c == 'S')
     return $ codecls a
+{-# INLINE parseLead #-}
 
 parseAxisDes = do
-    a <- satisfy $ inClass "XYZABCEL"
+    a <- satisfy $ (\c -> c == 'X' || c == 'Y' || c == 'Z' || c == 'A' || c == 'B' || c == 'C' || c == 'E' || c == 'L')
     return $ axis a
+{-# INLINE parseAxisDes #-}
 
 parseParamDes = do
     a <- satisfy $ inClass "SPF"
     return $ param a
+{-# INLINE parseParamDes #-}
 
 parseParamOrAxis = do
     lskip
@@ -65,16 +68,21 @@ parseAxesParams :: Parser (Axes, Params)
 parseAxesParams = do
     a <- many parseParamOrAxis
     return (M.fromList $ lefts a, M.fromList $ rights a)
+{-# INLINE parseAxesParams #-}
+
 
 parseCode = do
-    lead <- parseLead
-    gcode <- decimal
-    subcode <- option 0 (Just <$> char '.' *> decimal)
+    lead <- optional parseLead
+    gcode <- optional decimal
+    subcode <- optional (char '.' *> decimal)
     lskip
     (axes, params) <- parseAxesParams
     lskip
     comment <- option "" $ between lskip lskip parseComment'
-    return $ Code lead gcode subcode axes params comment
+    let c = Code lead gcode subcode axes params comment
+    if c == emptyCode
+      then return $ Empty
+      else return c
 
 parseComment' = do
     t <- many $ between (lskip *> char '(') (char ')' <* lskip) $ takeWhile1 (/=')')

@@ -22,8 +22,16 @@ library
                      , ansi-wl-pprint
                      , bytestring
                      , containers
+                     , double-conversion
                      , text
                      , formatting
+                     , pipes
+                     , pipes-aeson
+                     , pipes-attoparsec
+                     , pipes-bytestring
+                     , mtl
+                     , vty
+                     , array
   default-language:    Haskell2010
 
 executable gcodehs
@@ -34,6 +42,7 @@ executable gcodehs
                      , aeson
                      , attoparsec
                      , bytestring
+                     , double-conversion
                      , gcodehs
                      , text
                      , pipes
@@ -43,6 +52,7 @@ executable gcodehs
 --                     , pipes-bytestring-mmap
                      , pipes-safe
                      , pipes-parse
+                     , pipes-text
                      , optparse-applicative
   default-language:    Haskell2010
 

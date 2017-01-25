@@ -13,20 +13,44 @@ module Data.GCode.Types (
     , ParamDesignator(..)
     , Axes
     , Params
+    , Limits
+    , ParamLimits
     , Code(..)
     , GCode
     , codecls
     , axis
+    , axis'
     , param
+    , param'
+    , CodeMod
+    , cls
+    , num
+    , sub
+    , axes
+    , params
+    , comment
+    , appmod
+    , eval
+    , emptyCode
+    , defaultPrec
+    , Style(..)
+    , defaultStyle
     ) where
 
 import qualified Data.ByteString      as B
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as TE
 
+--import qualified Foldable as F
+import Data.Semigroup hiding (option)
+import Control.Monad.State.Strict
+import Control.Applicative
+
 import Data.Aeson
 import GHC.Generics
 import qualified Data.Map.Strict as M
+
+
 
 -- | Code class
 data Class =
@@ -55,6 +79,7 @@ data ParamDesignator =
     S -- ^ S parameter - usually spindle RPM
   | P -- ^ P parameter
   | F -- ^ S parameter - usually feedrate
+  | R -- ^ R parameter
   deriving (Generic, Show, Enum, Eq, Ord)
 
 -- |Convert 'Char' representation of a code to its 'Class'
@@ -82,28 +107,35 @@ param :: Char -> ParamDesignator
 param 'S' = S
 param 'P' = P
 param 'F' = F
+param 'R' = R
 
 -- | Map of 'AxisDesignator' to 'Double'
 type Axes = M.Map AxisDesignator Double
 
+type Limits = M.Map AxisDesignator (Double, Double)
+
 -- | Map of 'ParamDesignator' to 'Double'
 type Params = M.Map ParamDesignator Double
+
+type ParamLimits = M.Map ParamDesignator (Double, Double)
 
 -- | List of 'Code's
 type GCode = [Code]
 
 data Code =
     Code {
-        cls :: Class            -- ^ Code 'Class' (M in M5)
-      , code :: Int             -- ^ Code value (81 in G81)
-      , sub :: Int              -- ^ Code subcode (1 in G92.1)
-      , axes :: Axes            -- ^ Code 'Axes'
-      , params :: Params        -- ^ Code 'Params'
-      , comment :: B.ByteString -- ^ Comment following this Code
+        codeCls :: Maybe Class            -- ^ Code 'Class' (M in M5)
+      , codeNum :: Maybe Int             -- ^ Code value (81 in G81)
+      , codeSub :: Maybe Int              -- ^ Code subcode (1 in G92.1)
+      , codeAxes :: Axes            -- ^ Code 'Axes'
+      , codeParams :: Params        -- ^ Code 'Params'
+      , codeComment :: B.ByteString -- ^ Comment following this Code
     }
   | Comment B.ByteString        -- ^ Standalone comment
-  | Other B.ByteString          -- ^ Parser unhandled lines (should contain blank lines only)
+  | Empty                       -- ^ Empty lines
+  | Other B.ByteString          -- ^ Parser unhandled lines
   deriving (Generic, Show, Eq, Ord)
+
 
 instance ToJSON ParamDesignator
 instance FromJSON ParamDesignator
@@ -137,3 +169,63 @@ instance ToJSON B.ByteString where
 instance FromJSON B.ByteString where
   parseJSON = withText "ByteString" $ pure . TE.encodeUtf8
   {-# INLINE parseJSON #-}
+
+
+newtype CodeMod = CodeMod
+  { applyCodeMod :: Code -> Code }
+
+instance Monoid CodeMod where
+  mempty = CodeMod id
+  mappend = (<>)
+
+instance Semigroup CodeMod where
+  m1 <> m2 = CodeMod $ applyCodeMod m1 . applyCodeMod m2
+
+cls :: Class -> CodeMod
+cls x = CodeMod $ \c -> c { codeCls = Just x}
+
+num :: Int -> CodeMod
+num x = CodeMod $ \c -> c { codeNum = Just x}
+
+sub :: Int -> CodeMod
+sub x = CodeMod $ \c -> c { codeSub = Just x}
+
+axes :: Axes -> CodeMod
+axes x = CodeMod $ \c -> c { codeAxes = x}
+
+axis' :: AxisDesignator -> Double -> CodeMod
+axis' des val = CodeMod $ \c -> c { codeAxes = M.insert des val $ codeAxes c }
+
+params :: Params -> CodeMod
+params x = CodeMod $ \c -> c { codeParams = x}
+
+param' :: ParamDesignator -> Double -> CodeMod
+param' des val = CodeMod $ \c -> c { codeParams = M.insert des val $ codeParams c }
+
+comment :: B.ByteString -> CodeMod
+comment x = CodeMod $ \c -> c { codeComment = x}
+
+appmod :: CodeMod -> Code -> Code
+appmod m c = applyCodeMod m c
+
+--data Sim = Empty
+--  | Line Axes Axes
+--  deriving (Show, Eq)
+
+--eval c1 c2 = Line (codeAxes c1) (codeAxes c2)
+eval = undefined
+
+emptyCode = Code Nothing Nothing Nothing M.empty M.empty ""
+
+
+
+data Style =
+  Style {
+      stylePrecision :: Int
+    , styleColorful :: Bool
+  } deriving (Show)
+
+defaultPrec :: Int
+defaultPrec = 6
+
+defaultStyle = Style defaultPrec False
