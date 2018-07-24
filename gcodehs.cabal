@@ -6,7 +6,7 @@ homepage:            https://github.com/hackerspace/gcodehs
 license:             BSD3
 license-file:        LICENSE
 author:              Richard Marko
-maintainer:          rmarko@base48.cz
+maintainer:          srk@48.io
 copyright:           2016 Richard Marko
 category:            Parsing
 build-type:          Simple
