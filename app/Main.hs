@@ -14,10 +14,8 @@ import qualified Pipes.Prelude as P
 import qualified Pipes.ByteString as B
 --import Pipes.ByteString.MMap
 import Pipes.Safe
-import Pipes.Aeson.Unchecked (encode)
 import qualified System.IO as IO
 
-import Data.Aeson (decode)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 
@@ -27,7 +25,6 @@ import Options.Applicative.Builder
 data Flags = Flags {
     input :: FilePath
   , output :: FilePath
-  , json :: Bool
   , pretty :: Bool
   , analyze :: Bool
   } deriving (Show)
@@ -41,7 +38,6 @@ flags :: Parser Flags
 flags = Flags
     <$> strOption ( long "input" <> short 'i' <> metavar "INPUT")
     <*> strOption ( long "output" <> short 'o' <> metavar "OUTPUT" <> value "")
-    <*> switch ( long "json" <> short 'j' <> help "JSON output")
     <*> switch ( long "pretty" <> short 'p' <> help "Pretty output")
     <*> switch ( long "analyze" <> short 'a' <> help "Analyze GCode")
 
@@ -60,9 +56,9 @@ run Flags{..} =
             r <- foldedpipe input analyzefold
             print r
         else case output of
-              "" -> gcodepipe input $ fmt json pretty >-> B.stdout
+              "" -> gcodepipe input $ fmt pretty >-> B.stdout
               _  -> IO.withFile output IO.WriteMode $ \outhandle ->
-                      gcodepipe input $ fmt json pretty >-> B.toHandle outhandle
+                      gcodepipe input $ fmt pretty >-> B.toHandle outhandle
 
 bufsize = 1024
 
@@ -86,14 +82,8 @@ analyzefold = P.fold step 0 id
 --  where step x a | isG a = x + 1
 --        step x a | otherwise = x
 
-fmt True _  = for Pipes.cat encode
-fmt False True  = P.map ppGCodeLine >-> P.map (BS.pack . (++"\n"))
-fmt False False = P.map ppGCodeLineCompact >-> P.map (BS.pack . (++"\n"))
-
--- doesn't work, probably due to bad FromJSON for maps
-readjsonmain = do
-  f <- BL.readFile "a.json"
-  print (decode f :: Maybe GCode)
+fmt True  = P.map ppGCodeLine >-> P.map (BS.pack . (++"\n"))
+fmt False = P.map ppGCodeLineCompact >-> P.map (BS.pack . (++"\n"))
 
 -- mmaped version, requires pipes-bytestring-mmap
 --main' = do

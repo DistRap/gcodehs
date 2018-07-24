@@ -7,7 +7,6 @@ import Pipes.Attoparsec as PA
 import qualified Pipes.Prelude as P
 import qualified Pipes.ByteString as B
 import Pipes.Safe
-import Pipes.Aeson.Unchecked (encode)
 import qualified System.IO as IO
 import qualified System.Environment as E
 

@@ -6,7 +6,6 @@ This module exports types for constructing 'Code' values
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveGeneric #-}
 module Data.GCode.Types (
       Class(..)
     , AxisDesignator(..)
@@ -46,8 +45,6 @@ import Data.Semigroup hiding (option)
 import Control.Monad.State.Strict
 import Control.Applicative
 
-import Data.Aeson
-import GHC.Generics
 import qualified Data.Map.Strict as M
 
 
@@ -60,7 +57,7 @@ data Class =
   | StP -- ^ Stand-alone P-code
   | StF -- ^ Stand-alone F-code
   | StS -- ^ Stand-alone S-code
-  deriving (Generic, Show, Enum, Eq, Ord)
+  deriving (Show, Enum, Eq, Ord)
 
 -- | Axis letter
 data AxisDesignator =
@@ -72,7 +69,7 @@ data AxisDesignator =
   | C -- ^ C-axis
   | E -- ^ Extruder axis
   | L
-  deriving (Generic, Show, Enum, Eq, Ord)
+  deriving (Show, Enum, Eq, Ord)
 
 -- | Param letter
 data ParamDesignator =
@@ -80,7 +77,7 @@ data ParamDesignator =
   | P -- ^ P parameter
   | F -- ^ F parameter - usually feedrate
   | R -- ^ R parameter
-  deriving (Generic, Show, Enum, Eq, Ord)
+  deriving (Show, Enum, Eq, Ord)
 
 -- |Convert 'Char' representation of a code to its 'Class'
 codecls :: Char -> Class
@@ -134,26 +131,7 @@ data Code =
   | Comment B.ByteString        -- ^ Standalone comment
   | Empty                       -- ^ Empty lines
   | Other B.ByteString          -- ^ Parser unhandled lines
-  deriving (Generic, Show, Eq, Ord)
-
-
-instance ToJSON ParamDesignator
-instance FromJSON ParamDesignator
-instance ToJSON Class
-instance ToJSON AxisDesignator
-instance FromJSON AxisDesignator
-instance FromJSON Class
-instance ToJSON Code
-instance FromJSON Code
-
-instance ToJSON B.ByteString where
-  toJSON = String . TE.decodeUtf8
-  {-# INLINE toJSON #-}
-
-instance FromJSON B.ByteString where
-  parseJSON = withText "ByteString" $ pure . TE.encodeUtf8
-  {-# INLINE parseJSON #-}
-
+  deriving (Show, Eq, Ord)
 
 newtype CodeMod = CodeMod
   { applyCodeMod :: Code -> Code }

@@ -17,10 +17,6 @@ To pretty-print `sample.gcode`::
 
   gcodehs -p -i sample.gcode
 
-To parse to JSON::
-
-  gcodehs -j -i sample.gcode
-
 See `gcodehs --help` for usage information.
 
 Examples
@@ -37,10 +33,6 @@ Simple parse and print::
 Pretty printing::
 
   stack runghc examples/Pretty.hs sample.gcode
-
-JSON output::
-
-  stack runghc examples/JSON.hs sample.gcode
 
 Naive non-streaming example::
 
@@ -61,9 +53,6 @@ to text but we do have colors!
 
 Fast pretty printer is needed that operates
 with ByteStrings directly.
-
-JSON support is only experimental, output is pretty ugly and
-fromJSON doesn't work, probably bad fromJSON instance for Axes/Params mapdoesn't work, probably bad fromJSON instance for Axes/Params maps.
 
 Bash completion
 ---------------
