@@ -69,7 +69,7 @@ isG2 = isGN 2
 isArcCW :: Code -> Bool
 isArcCW = isG2
 
- -- |True if 'Code' is a G3 code
+-- |True if 'Code' is a G3 code
 isG3 :: Code -> Bool
 isG3 = isGN 3
 
@@ -93,7 +93,7 @@ isG5 = isGN 5
 isCubicSpline :: Code -> Bool
 isCubicSpline = isG5
 
- -- |True if 'Code' is a G5.1 code
+-- |True if 'Code' is a G5.1 code
 isG5s1 :: Code -> Bool
 isG5s1 = isGNs 5 1
 
