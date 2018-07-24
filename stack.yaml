@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: nightly-2016-07-13
+resolver: lts-11.18
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -40,8 +40,7 @@ packages:
 #- 'pipes-bytestring-mmap'
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps:
-- 'pipes-aeson-0.4.1.6'
+extra-deps: []
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -66,3 +65,5 @@ extra-package-dbs: []
 # 
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+nix:
+  packages: [pkgconfig zlib]
