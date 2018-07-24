@@ -16,6 +16,7 @@ import qualified Pipes.ByteString as B
 import Pipes.Safe
 import qualified System.IO as IO
 
+import Data.Monoid ((<>))
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 
