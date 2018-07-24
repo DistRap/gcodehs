@@ -20,9 +20,6 @@ import Data.GCode.Utils
 
 import Data.Double.Conversion.Text
 
-import Formatting (sformat)
-import Formatting.ShortFormatters
-
 -- |Pretty-print 'GCode' using colors
 ppGCode :: GCode -> String
 ppGCode = ppGCodeStyle defaultStyle
@@ -80,7 +77,7 @@ cc _ _ = red
 
 ppAxis style (des, val) =
        bold (axisColor des $ text $ show des)
-    <> cyan (text $ T.unpack $ sformat sf (roundprec 6 val))
+    <> cyan (text $ T.unpack $ toPrecision (stylePrecision style) val)
 
 
 axisColor X = red

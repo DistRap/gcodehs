@@ -23,7 +23,6 @@ library
                      , containers
                      , double-conversion
                      , text
-                     , formatting
                      , pipes
                      , pipes-attoparsec
                      , pipes-bytestring
