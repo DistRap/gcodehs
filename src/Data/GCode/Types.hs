@@ -146,22 +146,6 @@ instance FromJSON Class
 instance ToJSON Code
 instance FromJSON Code
 
-instance ToJSON v => ToJSON (M.Map ParamDesignator v) where
-  toJSON = toJSON . M.mapKeys show
-
-instance FromJSON v => FromJSON (M.Map ParamDesignator v) where
-  parseJSON v = convert <$> parseJSON v
-      where convert :: M.Map T.Text v -> M.Map ParamDesignator v
-            convert =  M.fromList . map (\(x,y) -> (param $ T.head x,y)) . M.toList
-
-instance ToJSON v => ToJSON (M.Map AxisDesignator v) where
-  toJSON = toJSON . M.mapKeys show
-
-instance FromJSON v => FromJSON (M.Map AxisDesignator v) where
-  parseJSON v = convert <$> parseJSON v
-      where convert :: M.Map T.Text v -> M.Map AxisDesignator v
-            convert =  M.fromList . map (\(x,y) -> (axis $ T.head x,y)) . M.toList
-
 instance ToJSON B.ByteString where
   toJSON = String . TE.decodeUtf8
   {-# INLINE toJSON #-}
