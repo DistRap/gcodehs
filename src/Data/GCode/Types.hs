@@ -78,7 +78,7 @@ data AxisDesignator =
 data ParamDesignator =
     S -- ^ S parameter - usually spindle RPM
   | P -- ^ P parameter
-  | F -- ^ S parameter - usually feedrate
+  | F -- ^ F parameter - usually feedrate
   | R -- ^ R parameter
   deriving (Generic, Show, Enum, Eq, Ord)
 
