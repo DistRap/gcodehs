@@ -87,6 +87,7 @@ axisColor A = red
 axisColor B = green
 axisColor C = blue
 axisColor E = magenta
+axisColor _ = id
 
 ppAxes _ [] = empty
 ppAxes style x = space <> ppList (ppAxis style) x
