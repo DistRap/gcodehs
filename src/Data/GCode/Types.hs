@@ -53,7 +53,7 @@ import qualified Data.Map.Strict as M
 data Class =
     G   -- ^ G-code
   | M   -- ^ M-code
-  | T   -- ^ T-code (temperature)
+  | T   -- ^ T-code (select tool)
   | StP -- ^ Stand-alone P-code
   | StF -- ^ Stand-alone F-code
   | StS -- ^ Stand-alone S-code
