@@ -108,6 +108,7 @@ ppComment' c = dullwhite $ parens $ text $ unpack c
 ppCode style Code{..} =
        ccMaybes codeCls codeNum ( bold $ ppMaybeClass codeCls)
     <> ccMaybes codeCls codeNum ( ppMaybe (text . show) codeNum)
+    <> ppMaybe (\x -> (text ".") <> (text $ show x)) codeSub
     <> ppAxes style (M.toList codeAxes)
     <> ppParams style (M.toList codeParams)
     <> ppComment codeComment
