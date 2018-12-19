@@ -77,8 +77,7 @@ cc _ _ = red
 
 ppAxis style (des, val) =
        bold (axisColor des $ text $ show des)
-    <> cyan (text $ T.unpack $ toPrecision (stylePrecision style) val)
-
+    <> cyan (text $ T.unpack $ toFixed (stylePrecision style) val)
 
 axisColor X = red
 axisColor Y = green
@@ -94,7 +93,7 @@ ppAxes style x = space <> ppList (ppAxis style) x
 
 ppParam style (des, val) =
        bold (blue $ text $ show des)
-    <> white (text $ T.unpack $ toPrecision (stylePrecision style) val)
+    <> white (text $ T.unpack $ toFixed (stylePrecision style) val)
 
 ppParams _ [] = empty
 ppParams style x = space <> ppList (ppParam style) x
