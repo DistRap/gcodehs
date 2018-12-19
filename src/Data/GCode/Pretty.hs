@@ -7,7 +7,13 @@ not the fastest as well. Colorfull versions are especially slow.
 -}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Data.GCode.Pretty(ppGCode, ppGCodeLine, ppGCodeCompact, ppGCodeLineCompact) where
+module Data.GCode.Pretty(
+    ppGCode
+  , ppGCodeLine
+  , ppGCodeCompact
+  , ppGCodeLineCompact
+  , ppGCodeStyle
+  , ppGCodeLineStyle) where
 
 import Data.ByteString.Char8 (pack, unpack)
 import qualified Data.Text as T
@@ -22,39 +28,35 @@ import Data.Double.Conversion.Text
 
 -- |Pretty-print 'GCode' using colors
 ppGCode :: GCode -> String
-ppGCode = ppGCodeStyle defaultStyle
-
--- |Pretty-print 'GCode' using colors with custom floating precision width
-ppGCodeStyle :: Style -> GCode -> String
-ppGCodeStyle style res = displayS (renderPretty 0.4 80 (ppGCode' style res)) ""
+ppGCode = ppGCodeStyle (defaultStyle { styleColorful = True })
 
 -- |Pretty-print single 'Code' using colors
 ppGCodeLine :: Code -> String
-ppGCodeLine = ppGCodeLineStyle defaultStyle
-
--- |Pretty-print single 'Code' using colors with custom floating precision width
-ppGCodeLineStyle :: Style -> Code -> String
-ppGCodeLineStyle style res = displayS (renderPretty 0.4 80 (ppCode style res)) ""
+ppGCodeLine = ppGCodeLineStyle (defaultStyle { styleColorful = True })
 
 -- |Pretty-print 'GCode' without colors
 ppGCodeCompact :: GCode -> String
-ppGCodeCompact = ppGCodeCompactStyle defaultStyle
-
--- |Pretty-print 'GCode' without colors with custom floating precision width
-ppGCodeCompactStyle :: Style -> GCode -> String
-ppGCodeCompactStyle style res = displayS (renderCompact (ppGCode' style res)) ""
+ppGCodeCompact = ppGCodeStyle defaultStyle
 
 -- |Pretty-print single 'Code' without colors
 ppGCodeLineCompact :: Code -> String
-ppGCodeLineCompact = ppGCodeLineCompactStyle defaultStyle
+ppGCodeLineCompact = ppGCodeLineStyle defaultStyle
 
--- |Pretty-print single 'Code' without colors with custom floating precision width
-ppGCodeLineCompactStyle :: Style -> Code -> String
-ppGCodeLineCompactStyle style res = displayS (renderCompact (ppCode style res)) ""
+-- |Pretty-print 'GCode' with specified `Style`
+ppGCodeStyle :: Style -> GCode -> String
+ppGCodeStyle style res = displayS ((renderer style) (ppGCode' style res)) ""
+  where renderer style | styleColorful style == True = renderPretty 0.4 80
+        renderer _ =  renderCompact
+
+-- |Pretty-print single 'Code' with specified `Style`
+ppGCodeLineStyle :: Style -> Code -> String
+ppGCodeLineStyle style res = displayS ((renderer style) (ppCode style res)) ""
+  where renderer style | styleColorful style == True = renderPretty 0.4 80
+        renderer _ =  renderCompact
 
 ppList pp x = hsep $ map pp x
 
-ppGCode' style = vsep . map (ppCode style)
+ppGCode' style code = (vsep $ map (ppCode style) code) <> hardline
 
 ppMaybe pp (Just x) = pp x
 ppMaybe pp Nothing = empty
