@@ -15,7 +15,16 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.GCode, Data.GCode.Types, Data.GCode.Parse, Data.GCode.Pretty, Data.GCode.Utils
+  exposed-modules:     Data.GCode
+                     , Data.GCode.Generate
+                     , Data.GCode.Eval
+                     , Data.GCode.Types
+                     , Data.GCode.Parse
+                     , Data.GCode.Pretty
+                     , Data.GCode.RS274
+                     , Data.GCode.RS274.Types
+                     , Data.GCode.TH
+                     , Data.GCode.Utils
   build-depends:       base >= 4.7 && < 5
                      , attoparsec
                      , ansi-wl-pprint
@@ -23,12 +32,7 @@ library
                      , containers
                      , double-conversion
                      , text
-                     , pipes
-                     , pipes-attoparsec
-                     , pipes-bytestring
-                     , mtl
-                     , vty
-                     , array
+                     , template-haskell
   default-language:    Haskell2010
 
 executable gcodehs
