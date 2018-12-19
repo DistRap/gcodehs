@@ -401,7 +401,7 @@ modifyXY f c | hasXY c =
   let x = fromJust $ getAxis X c
       y = fromJust $ getAxis Y c
       (nx, ny) = f x y
-  in appmod (axis' X nx <> axis' Y ny) c
+  in appmod (axis X nx <> axis Y ny) c
 modifyXY _ c = c
 
 -- |Replace or add axis with 'AxisDesignator' in 'Code' returning new 'Code'

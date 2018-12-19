@@ -16,20 +16,19 @@ module Data.GCode.Types (
     , ParamLimits
     , Code(..)
     , GCode
-    , codecls
-    , axis
-    , axis'
-    , param
-    , param'
-    , CodeMod
+    , toCodeClass
+    , toAxis
+    , toParam
+    , CodeMod(..)
     , cls
+    , axis
+    , param
     , num
     , sub
     , axes
     , params
     , comment
     , appmod
-    , eval
     , emptyCode
     , defaultPrec
     , Style(..)
@@ -42,12 +41,9 @@ import qualified Data.Text.Encoding   as TE
 
 --import qualified Foldable as F
 import Data.Semigroup hiding (option)
-import Control.Monad.State.Strict
 import Control.Applicative
 
 import qualified Data.Map.Strict as M
-
-
 
 -- | Code class
 data Class =
@@ -67,6 +63,9 @@ data AxisDesignator =
   | A -- ^ A-axis
   | B -- ^ B-axis
   | C -- ^ C-axis
+  | U -- ^ U-axis
+  | V -- ^ V-axis
+  | W -- ^ W-axis
   | E -- ^ Extruder axis
   | L
   deriving (Show, Enum, Eq, Ord)
@@ -80,40 +79,45 @@ data ParamDesignator =
   deriving (Show, Enum, Eq, Ord)
 
 -- |Convert 'Char' representation of a code to its 'Class'
-codecls :: Char -> Class
-codecls 'G' = G
-codecls 'M' = M
-codecls 'T' = T
-codecls 'P' = StP
-codecls 'F' = StF
-codecls 'S' = StS
+toCodeClass :: Char -> Class
+toCodeClass 'G' = G
+toCodeClass 'M' = M
+toCodeClass 'T' = T
+toCodeClass 'P' = StP
+toCodeClass 'F' = StF
+toCodeClass 'S' = StS
 
 -- |Convert 'Char' representation of an axis to its 'AxisDesignator'
-axis :: Char -> AxisDesignator
-axis 'X' = X
-axis 'Y' = Y
-axis 'Z' = Z
-axis 'A' = A
-axis 'B' = B
-axis 'C' = C
-axis 'E' = E
-axis 'L' = L
+toAxis :: Char -> AxisDesignator
+toAxis 'X' = X
+toAxis 'Y' = Y
+toAxis 'Z' = Z
+toAxis 'A' = A
+toAxis 'B' = B
+toAxis 'C' = C
+toAxis 'U' = U
+toAxis 'V' = V
+toAxis 'W' = W
+toAxis 'E' = E
+toAxis 'L' = L
 
 -- |Convert 'Char' representation of a param to its 'ParamDesignator'
-param :: Char -> ParamDesignator
-param 'S' = S
-param 'P' = P
-param 'F' = F
-param 'R' = R
+toParam :: Char -> ParamDesignator
+toParam 'S' = S
+toParam 'P' = P
+toParam 'F' = F
+toParam 'R' = R
 
 -- | Map of 'AxisDesignator' to 'Double'
 type Axes = M.Map AxisDesignator Double
 
+-- | Map of 'AxisDesignator' to pair of 'Double's indicating lower and upper limits of travel
 type Limits = M.Map AxisDesignator (Double, Double)
 
 -- | Map of 'ParamDesignator' to 'Double'
 type Params = M.Map ParamDesignator Double
 
+-- | Map of 'ParamDesignator' to pair of 'Double's indicating lower and upper limits of this parameter
 type ParamLimits = M.Map ParamDesignator (Double, Double)
 
 -- | List of 'Code's
@@ -121,9 +125,9 @@ type GCode = [Code]
 
 data Code =
     Code {
-        codeCls :: Maybe Class            -- ^ Code 'Class' (M in M5)
-      , codeNum :: Maybe Int             -- ^ Code value (81 in G81)
-      , codeSub :: Maybe Int              -- ^ Code subcode (1 in G92.1)
+        codeCls :: Maybe Class      -- ^ Code 'Class' (M in M5)
+      , codeNum :: Maybe Int        -- ^ Code value (81 in G81)
+      , codeSub :: Maybe Int        -- ^ Code subcode (1 in G92.1)
       , codeAxes :: Axes            -- ^ Code 'Axes'
       , codeParams :: Params        -- ^ Code 'Params'
       , codeComment :: B.ByteString -- ^ Comment following this Code
@@ -155,14 +159,14 @@ sub x = CodeMod $ \c -> c { codeSub = Just x}
 axes :: Axes -> CodeMod
 axes x = CodeMod $ \c -> c { codeAxes = x}
 
-axis' :: AxisDesignator -> Double -> CodeMod
-axis' des val = CodeMod $ \c -> c { codeAxes = M.insert des val $ codeAxes c }
+axis :: AxisDesignator -> Double -> CodeMod
+axis des val = CodeMod $ \c -> c { codeAxes = M.insert des val $ codeAxes c }
 
 params :: Params -> CodeMod
 params x = CodeMod $ \c -> c { codeParams = x}
 
-param' :: ParamDesignator -> Double -> CodeMod
-param' des val = CodeMod $ \c -> c { codeParams = M.insert des val $ codeParams c }
+param :: ParamDesignator -> Double -> CodeMod
+param des val = CodeMod $ \c -> c { codeParams = M.insert des val $ codeParams c }
 
 comment :: B.ByteString -> CodeMod
 comment x = CodeMod $ \c -> c { codeComment = x}
@@ -170,16 +174,7 @@ comment x = CodeMod $ \c -> c { codeComment = x}
 appmod :: CodeMod -> Code -> Code
 appmod m c = applyCodeMod m c
 
---data Sim = Empty
---  | Line Axes Axes
---  deriving (Show, Eq)
-
---eval c1 c2 = Line (codeAxes c1) (codeAxes c2)
-eval = undefined
-
 emptyCode = Code Nothing Nothing Nothing M.empty M.empty ""
-
-
 
 data Style =
   Style {

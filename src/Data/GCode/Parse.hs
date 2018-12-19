@@ -37,17 +37,17 @@ isEndOfLineChr _ = False
 
 parseLead = do
     a <- satisfy $ (\c -> c == 'G' || c == 'M' || c == 'T' || c == 'P' || c == 'F' || c == 'S')
-    return $ codecls a
+    return $ toCodeClass a
 {-# INLINE parseLead #-}
 
 parseAxisDes = do
     a <- satisfy $ (\c -> c == 'X' || c == 'Y' || c == 'Z' || c == 'A' || c == 'B' || c == 'C' || c == 'E' || c == 'L')
-    return $ axis a
+    return $ toAxis a
 {-# INLINE parseAxisDes #-}
 
 parseParamDes = do
-    a <- satisfy $ inClass "SPF"
-    return $ param a
+    a <- satisfy $ inClass "SPFR"
+    return $ toParam a
 {-# INLINE parseParamDes #-}
 
 parseParamOrAxis = do
