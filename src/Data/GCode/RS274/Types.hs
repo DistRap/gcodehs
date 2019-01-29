@@ -29,7 +29,6 @@ m x n = defM { defNum = Just x , defName = n }
 gsub x s n = (g x n) { defSub = Just s }
 msub x s n = (m x n) { defSub = Just s }
 
-(&) = flip ($)
 help txt x = x {defHelp = txt }
 
 -- turn `GCodeDef` into `Code`
@@ -53,9 +52,12 @@ data RS274Name =
   | CubicSpline
   | QuadSpline
   | NURBS
-  | XYZPlane
-  | XZYPlane
-  | YZXPlane
+  | XYPlane
+  | ZXPlane
+  | YZPlane
+  | UVPlane
+  | WUPlane
+  | VWPlane
   | Inches
   | Millimeters
   | SpindleSync
@@ -125,6 +127,7 @@ data RS274Group =
     Motion
   | Cycles
   | Distance
+  | ArcDistance
   | FeedRateMode
   | SpindleControl
   | CoolantControl
@@ -133,6 +136,7 @@ data RS274Group =
   | Plane
   | ToolLengthOffset
   | CutterRadius
+  | LatheDiameterMode
   | OtherModal
   | NonModal
   | Unknown
@@ -158,25 +162,34 @@ groupMotion = makeGroup Motion [
       & help "Quadratic B-spline move"
   , gsub 5 2 NURBS
       & help "NURBS curve move"
-
-  , g 17 XYZPlane
-      & help "Select XYZ plane (default)"
-  , g 18 XZYPlane
-      & help "Select XZY plane"
-  , g 19 YZXPlane
-      & help "Select YZX plane"
-
-  , g 20 Inches
-      & help "Set units to inches"
-  , g 21 Millimeters
-      & help "Set units to millimeters"
-
   , g 33 SpindleSync
       & help "Perform spindle synchronized motion"
   , gsub 33 1 RigidTap
       & help "Rigid Tapping"
   , g 38 Probe
       & help "Straight probe"
+  ]
+
+groupPlane = makeGroup Plane [
+    g 17 XYPlane
+      & help "Select XY plane (default)"
+  , g 18 ZXPlane
+      & help "Select ZX plane"
+  , g 19 YZPlane
+      & help "Select YZ plane"
+  , gsub 17 1 UVPlane
+      & help "Select UV plane"
+  , gsub 18 1 WUPlane
+      & help "Select WU plane"
+  , gsub 19 1 VWPlane
+      & help "Select VW plane"
+  ]
+
+groupUnits = makeGroup Units [
+    g 20 Inches
+      & help "Set units to inches"
+  , g 21 Millimeters
+      & help "Set units to millimeters"
   ]
 
 groupCutterRadius = makeGroup CutterRadius [
@@ -213,11 +226,17 @@ groupDistance = makeGroup Distance [
       & help "Absolute distance mode"
   , g 91 Relative
       & help "Incremental distance mode"
-  , gsub 90 1 ArcAbsolute
+  ]
+
+groupArcDistance = makeGroup ArcDistance [
+    gsub 90 1 ArcAbsolute
       & help "Absolute distance mode for I, J & K offsets"
   , gsub 91 1 ArcRelative
       & help "Incremental distance mode for I, J & K offsets"
-  , g 7 LatheDiameter
+  ]
+
+groupLatheDiameterMode = makeGroup LatheDiameterMode [
+    g 7 LatheDiameter
   , g 8 LatheRadius
   ]
 
@@ -298,9 +317,9 @@ groupNonModal = makeGroup NonModal [
   ]
 
 groupOtherModal = makeGroup OtherModal [
-    defGCD { defCls = Just StF }
+    defGCD { defCls = Just FStandalone }
       & help "Set feed rate"
-  , defGCD { defCls = Just StS }
+  , defGCD { defCls = Just SStandalone }
       & help "Set spindle speed"
   , defGCD { defCls = Just T }
       & help "Select tool"
@@ -320,14 +339,18 @@ groupOtherModal = makeGroup OtherModal [
 
 allGroups = [
     (Motion           , groupMotion)
+  , (Plane            , groupPlane)
+  , (Units            , groupUnits)
   , (ToolLengthOffset , groupToolLengthOffset)
   , (Cycles           , groupCycles)
   , (Distance         , groupDistance)
+  , (ArcDistance      , groupArcDistance)
   , (FeedRateMode     , groupFeedRateMode)
   , (SpindleControl   , groupSpindleControl)
   , (Stopping         , groupStopping)
   , (CoolantControl   , groupCoolantControl)
   , (CutterRadius     , groupCutterRadius)
+  , (LatheDiameterMode, groupLatheDiameterMode)
   , (OtherModal       , groupOtherModal)
   , (NonModal         , groupNonModal)
   ]
