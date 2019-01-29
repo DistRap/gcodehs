@@ -11,60 +11,54 @@ import Data.GCode.Utils
 import Data.GCode.Pretty
 import Data.Semigroup hiding (option)
 
--- |Turn `CodeMod`ifier(s) into `Code`
-code :: CodeMod -> Code
-code x = appmod x emptyCode
+-- |Generate G Code
+g :: Code
+g = cls G emptyCode
 
--- |Map CodeMod generating function over list
-mapCode :: (a -> CodeMod) -> [a] -> [Code]
-mapCode f = map (code . f)
+-- |Generate M Code
+m :: Code
+m = cls M emptyCode
 
--- |Turn a list of `CodeMod`ifier(s) into `GCode`
-toGCode :: [CodeMod] -> GCode
-toGCode = map code
-
--- |Set Code class to G
-g :: CodeMod
-g = cls G
-
--- |Set Code class to M
-m :: CodeMod
-m = cls M
-
--- |Set Code class to S
-s :: CodeMod
-s = cls StS
+-- |Generate S (set spindle feedrate) Code
+s :: Code
+s = emptyCode & cls SStandalone
 
 -- |Set GCode number
-(<#>) :: CodeMod -> Int -> CodeMod
-(<#>) a b = a <> (num b)
+(<#>) :: Code -> Int -> Code
+(<#>) a n = num n a
 
 -- |Set GCode feedrate (F parameter)
-feed :: Double -> CodeMod
+feed :: Double -> Code -> Code
 feed = param F
 
 -- |Set `x` axis target
-x :: Double -> CodeMod
+x :: Double -> Code -> Code
 x = axis X
 
 -- |Set `y` axis target
-y :: Double -> CodeMod
+y :: Double -> Code -> Code
 y = axis Y
 
 -- |Set `z` axis target
-z :: Double -> CodeMod
+z :: Double -> Code -> Code
 z = axis Z
 
 -- |Set `x`, `y` coordinates for this Code
-xy :: Double -> Double -> CodeMod
-xy xVal yVal = x xVal <> y yVal
+xy :: Double -> Double -> Code -> Code
+xy xVal yVal = x xVal . y yVal
 
 -- |Set `x`, `y` and `z` coordinates
-xyz :: Double -> Double -> Double -> CodeMod
-xyz xVal yVal zVal = x xVal <> y yVal <> z zVal
+xyz :: Double -> Double -> Double -> Code -> Code
+xyz xVal yVal zVal = x xVal . y yVal . z zVal
 
 -- |Set G0 and `x`, `y` coordinates
-movexy x y = move <> xy x y
+movexy x y = move & xy x y
+
+-- |Set `i`, `j` parameters for this Code
+ij :: Double -> Double -> Code -> Code
+ij iVal jVal = param I iVal . param J jVal
+
+arc = arcCW
 
 -- |Generate points on a rectangle
 rectangle :: (Num a, Num b) => a -> b -> [(a, b)]
@@ -113,6 +107,6 @@ travelDrills up block = travel up emptyCode block
 -- and turn it into rapid move
 asRapidXY c@Code{} =
   case getAxes [X,Y] c of
-     [Just x, Just y] -> code (rapid <> xy x y)
+     [Just x, Just y] -> rapid & xy x y
      _ -> c
 asRapidXY x = x

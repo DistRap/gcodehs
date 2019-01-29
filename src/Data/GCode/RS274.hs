@@ -26,11 +26,8 @@ explain code@Code{} = case M.lookup (decimate code) codesToDefs of
 explain x = ""
 
 -- only to be used by TH
-fromName :: RS274Name -> Code
-fromName n = fromJust $ M.lookup n namesToCodes
-
-codeModFromName :: RS274Name -> CodeMod
-codeModFromName n = CodeMod $ \x -> copyClassNumSub (fromName n) x
+codeFromName :: RS274Name -> Code
+codeFromName n = fromJust $ M.lookup n namesToCodes
 
 -- unused
 eqClassNumSub :: Code -> Code -> Bool
@@ -39,7 +36,7 @@ eqClassNumSub a b = (decimate a) == (decimate b)
 -- strip this code of its axes/parameters/comments
 -- copy just class, code number and subcode
 decimate :: Code -> Code
-decimate x@Code{} | codeCls x `elem` (map Just [T, StF, StP, StS]) = copyClass x emptyCode
+decimate x@Code{} | codeCls x `elem` (map Just [T, FStandalone, PStandalone, SStandalone]) = copyClass x emptyCode
 decimate x@Code{} = copyClassNumSub x emptyCode
 decimate x = x
 

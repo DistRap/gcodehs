@@ -69,6 +69,7 @@ hasParam :: ParamDesignator -> Code -> Bool
 hasParam p Code{..} = M.member p codeParams
 hasParam a _ = False
 
+-- |Get parameter if defined
 getParam :: ParamDesignator -> Code -> Maybe Double
 getParam p Code{..} = M.lookup p codeParams
 
@@ -94,37 +95,41 @@ moves  = filter isMove
 
 -- |Replace 'Class' of 'Code' (e.g. for chaning G0 to M0)
 replaceClass :: Class -> Code -> Code
-replaceClass newclass c = appmod (cls newclass) c
+replaceClass newclass c = cls newclass c
 
 -- |Replace code value of 'Code' (e.g. for chaning G0 to G1)
 replaceCode :: Int -> Code -> Code
-replaceCode newcode c = appmod (num newcode) c
+replaceCode newcode c = num newcode c
 
 -- |Replace axis with 'AxisDesignator' in 'Code' returning new 'Code'
 replaceAxis :: AxisDesignator -> Double -> Code -> Code
 replaceAxis de val c@Code{..} | hasAxis de c = addReplaceAxis de val c
 replaceAxis _ _ c = c
 
+-- |Apply function to axis specified by 'AxisDesignator'
 modifyAxis :: AxisDesignator -> (Double -> Double) -> Code -> Code
 modifyAxis de f c@Code{..} | hasAxis de c = addReplaceAxis de (f $ fromJust $ getAxis de c) c
 modifyAxis _ _ c = c
 
+-- |Apply function to axes specified by '[AxisDesignator]'
 modifyAxes :: [AxisDesignator] -> (Double -> Double) -> Code -> Code
 modifyAxes axes f c = foldl (\c1  ax -> modifyAxis ax f c1) c axes
 
+-- |Test if Code has X and Y axes
 hasXY c = hasAxis X c && hasAxis Y c
 
+-- |Apply function to X and Y axes
 modifyXY :: (Double -> Double -> (Double, Double)) -> Code -> Code
 modifyXY f c | hasXY c =
   let x = fromJust $ getAxis X c
       y = fromJust $ getAxis Y c
       (nx, ny) = f x y
-  in appmod (axis X nx <> axis Y ny) c
+  in c & axis X nx & axis Y ny
 modifyXY _ c = c
 
 -- |Replace or add axis with 'AxisDesignator' in 'Code' returning new 'Code'
 addReplaceAxis :: AxisDesignator -> Double -> Code -> Code
-addReplaceAxis de val c@Code{..} = appmod (axes $ newaxes $ codeAxes) c
+addReplaceAxis de val c@Code{..} = c & (axes $ newaxes $ codeAxes)
   where
     newaxes = M.insert de val
 addReplaceAxis _ _ x = x
@@ -161,19 +166,29 @@ addReplaceZ = addReplaceAxis Z
 addReplaceE :: Double -> Code -> Code
 addReplaceE = addReplaceAxis E
 
-
 -- |Replace parameter with 'ParamDesignator' in 'Code' returning new 'Code'
 replaceParam :: ParamDesignator -> Double -> Code -> Code
 replaceParam de val c@Code{..} | hasParam de c = addReplaceParam de val c
 replaceParam _ _ c = c
 
+-- |Apply function to parameter with 'ParamDesignator'
 modifyParam :: ParamDesignator -> (Double -> Double) -> Code -> Code
 modifyParam de f c@Code{..} | hasParam de c = addReplaceParam de (f $ fromJust $ getParam de c) c
 modifyParam _ _ c = c
 
+-- |Apply function to parameters specified by '[ParamDesignator]'
+modifyParams :: [ParamDesignator] -> (Double -> Double) -> Code -> Code
+modifyParams params f c = foldl (\c1 ax -> modifyParam ax f c1) c params
+
+-- |Apply function to parameters specified by '[ParamDesignator]'
+--
+-- Function gets 'ParameterDesignator' passed as its first argument
+modifyParamsWithKey :: [ParamDesignator] -> (ParamDesignator -> Double -> Double) -> Code -> Code
+modifyParamsWithKey params f c = foldl (\c1 ax -> modifyParam ax (f ax) c1) c params
+
 -- |Replace or add parameter with 'ParamDesignator' in 'Code' returning new 'Code'
 addReplaceParam :: ParamDesignator -> Double -> Code -> Code
-addReplaceParam de val c@Code{..} = appmod (params $ newparams $ codeParams) c
+addReplaceParam de val c@Code{..} = c & (params $ newparams $ codeParams)
   where
     newparams = M.insert de val
 addReplaceParam _ _ x = x
@@ -182,6 +197,7 @@ addReplaceParam _ _ x = x
 replaceFeedrate :: Double -> Code -> Code
 replaceFeedrate = replaceParam F
 
+-- |Apply function to feedrate
 modifyFeedrate :: (Double -> Double) -> Code -> Code
 modifyFeedrate = modifyParam F
 

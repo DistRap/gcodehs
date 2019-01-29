@@ -63,12 +63,12 @@ ppMaybe pp Nothing = empty
 
 ppMaybeClass = ppMaybe ppClass
 
-ppClass G = yellow $ text "G"
-ppClass M = red $ text "M"
-ppClass T = magenta $ text "T"
-ppClass StP = red $ text "P"
-ppClass StF = red $ text "F"
-ppClass StS = red $ text "S"
+ppClass G           = yellow $ text "G"
+ppClass M           = red $ text "M"
+ppClass T           = magenta $ text "T"
+ppClass PStandalone = red $ text "P"
+ppClass FStandalone = red $ text "F"
+ppClass SStandalone = red $ text "S"
 
 ccMaybes (Just cls) (Just num) = cc cls num
 ccMaybes _ _ = id

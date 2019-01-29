@@ -6,6 +6,8 @@ module Data.GCode.Parse (parseGCode, parseGCodeLine, parseOnlyGCode) where
 
 import Data.GCode.Types
 
+import Data.Char (toLower)
+import Data.Maybe (fromJust)
 import Prelude hiding (take, takeWhile, mapM)
 import Control.Applicative
 import qualified Data.ByteString as B
@@ -36,18 +38,18 @@ isEndOfLineChr '\r' = True
 isEndOfLineChr _ = False
 
 parseLead = do
-    a <- satisfy $ (\c -> c == 'G' || c == 'M' || c == 'T' || c == 'P' || c == 'F' || c == 'S')
-    return $ toCodeClass a
+    a <- satisfy $ inClass $ (asChars allClasses) ++ (map toLower $ asChars allClasses)
+    return $ fromJust $ toCodeClass a
 {-# INLINE parseLead #-}
 
 parseAxisDes = do
-    a <- satisfy $ (\c -> c == 'X' || c == 'Y' || c == 'Z' || c == 'A' || c == 'B' || c == 'C' || c == 'E' || c == 'L')
-    return $ toAxis a
+    a <- satisfy $ inClass $ asChars allAxisDesignators
+    return $ fromJust $ toAxis a
 {-# INLINE parseAxisDes #-}
 
 parseParamDes = do
-    a <- satisfy $ inClass "SPFR"
-    return $ toParam a
+    a <- satisfy $ inClass $ asChars allParamDesignators
+    return $ fromJust $ toParam a
 {-# INLINE parseParamDes #-}
 
 parseParamOrAxis = do
