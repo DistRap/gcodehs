@@ -21,6 +21,6 @@ main = do
   IO.withFile file IO.ReadMode $ \handle ->
     runSafeT . runEffect $
       (() <$ PA.parsed parseGCodeLine (B.hGetSome bufsize handle) )
-      >-> P.map (modifyXY (rot (-angle*pi/2)))
+      >-> P.map (modifyXY (rot (angle*pi/180)))
       >-> P.map ppGCodeLineCompact
       >-> P.stdoutLn

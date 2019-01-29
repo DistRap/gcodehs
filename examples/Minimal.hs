@@ -26,10 +26,6 @@ main = do
 --      >-> P.map ppGCodeLineCompact
       >-> P.stdoutLn
 --
--- or to json
---      >-> for Pipes.cat encode
---      >-> B.stdout
---
 -- non-streaming version, will eat a lot of ram
 --main = do
 --    file <- fmap Prelude.head getArgs

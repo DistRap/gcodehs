@@ -30,7 +30,6 @@ main = do
   file    <- fmap Prelude.head E.getArgs
   a <- IO.withFile file IO.ReadMode $ \handle ->
     runSafeT . runEffect $
-      foldLimits (() <$ PA.parsed parseGCodeLine (B.hGetSome bufsize handle) )
+      foldLimits (() <$ PA.parsed parseGCodeLine (B.hGetSome bufsize handle))
 
   mapM_ (TIO.putStrLn . ppLimit) $ M.toList a
-
