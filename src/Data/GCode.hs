@@ -11,5 +11,5 @@ import Data.GCode.Generate as X
 import Data.GCode.Types as X
 import Data.GCode.Parse as X
 import Data.GCode.Pretty as X
-import Data.GCode.RS274 as X
+--import Data.GCode.RS274 as X
 import Data.GCode.Utils as X
