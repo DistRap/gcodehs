@@ -101,5 +101,5 @@ parseOther = do
 
 parseCodeParts =
            parseCode
-      <|>  parseComment
       <|>  parseOther
+      <|>  parseComment
