@@ -1,52 +1,24 @@
-GCodeHS
+gcodehs
 =======
 
 Installing
 ----------
 
-* Install stack https://docs.haskellstack.org/en/stable/README/
-* git clone https://github.com/hackerspace/gcodehs/
-* cd gcodehs
-* stack build
-* stack install
+* `git clone https://github.com/distrap/gcodehs/`
+* `cd gcodehs`
+* `nix-build` or `nix-shell`
 
 Usage
 -----
 
 To pretty-print `sample.gcode`::
 
-  gcodehs -p -i sample.gcode
+  gcodehs pretty sample.gcode
 
 See `gcodehs --help` for usage information.
 
-Examples
---------
-
-Filtering and Manipulation::
-
-  stack runghc examples/Main.hs sample.gcode
-
-Simple parse and print::
-
-  stack runghc examples/Simple.hs sample.gcode
-
-Pretty printing::
-
-  stack runghc examples/Pretty.hs sample.gcode
-
-Naive non-streaming example::
-
-  stack runghc examples/Naive.hs sample.gcode
-
-
 Development status
 ------------------
-
-Parser won't handle modal GCode such as::
-
-  G0 X10 Y20
-  X0 Y10
-
 
 Pretty printing is slow due to conversion
 to text but we do have colors!
@@ -64,11 +36,3 @@ Generating bash completion::
 or sourcing directly::
 
   source <(gcodehs --bash-completion-script `which gcodehs`)
-
-Profiling
----------
-
-Build with profiling enabled::
-
-  stack build --profile
-  stack exec -- gcodehs +RTS -p -RTS -p -i sample.gcode

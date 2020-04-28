@@ -2,7 +2,7 @@ name:                gcodehs
 version:             0.1.1.0
 synopsis:            GCode processor
 description:         GCode parser, pretty-printer and processing utils
-homepage:            https://github.com/hackerspace/gcodehs
+homepage:            https://github.com/distrap/gcodehs
 license:             BSD3
 license-file:        LICENSE
 author:              Richard Marko
@@ -83,4 +83,4 @@ test-suite gcodehs-test
 
 source-repository head
   type:     git
-  location: https://github.com/hackerspace/gcodehs
+  location: https://github.com/distrap/gcodehs
