@@ -13,6 +13,7 @@ module Data.GCode.Types (
     , ParamDesignator(..)
     , allClasses
     , allAxisDesignators
+    , zeroAxes
     , allParamDesignators
     , asChars
     , Axes
@@ -77,6 +78,10 @@ data AxisDesignator =
   deriving (Show, Enum, Eq, Ord)
 
 allAxisDesignators = [X, Y, Z, A, B, C, U, V, W, E, L]
+
+-- | Return `Axes` with each known at zero position
+zeroAxes :: Axes
+zeroAxes = Data.Map.fromList $ map (\a -> (a, 0)) allAxisDesignators
 
 -- | Param letter
 data ParamDesignator =
