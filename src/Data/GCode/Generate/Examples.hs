@@ -17,7 +17,7 @@ preamble = [
     unitsPerMinute
   , absolute
   , millimeters
-  , g <#> 3000
+  , g <#> 0 & param F 3000
   , s <#> 12000
   , spindleCW
   , dwell & param P 10
