@@ -25,7 +25,7 @@ codeInGroup code group = (fmap defGroup $ M.lookup (decimate code) codesToDefs) 
 explain code@Code{} = case M.lookup (decimate code) codesToDefs of
   Nothing -> ""
   Just def -> defHelp def
-explain x = ""
+explain _ = ""
 
 -- only to be used by TH
 codeFromName :: RS274Name -> Code

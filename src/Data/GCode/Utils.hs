@@ -7,7 +7,6 @@ Utilities for manipulating and filtering 'GCode'
 module Data.GCode.Utils where
 
 import Data.Maybe
-import Data.Monoid
 
 import Data.GCode.Types
 import Data.GCode.RS274 (isMove, isRapid)
@@ -15,31 +14,30 @@ import qualified Data.Map.Strict as M
 
 -- | True if 'Code' is a G-code
 isG :: Code -> Bool
-isG Code{codeCls=(Just G), ..} = True
+isG Code{codeCls=(Just G)} = True
 isG _ = False
 
 -- | True if 'Code' is a M-code
 isM :: Code -> Bool
-isM Code{codeCls=(Just M), ..} = True
+isM Code{codeCls=(Just M)} = True
 isM _ = False
 
 -- | True if 'Code' is a G{N} code
 isGN :: Int -> Code -> Bool
-isGN n Code{codeCls=(Just G), codeNum=(Just x), ..} = x == n
+isGN n Code{codeCls=(Just G), codeNum=(Just x)} = x == n
 isGN _ _ = False
 
 -- | True if 'Code' has a coordinate in axis 'a'
 hasAxis :: AxisDesignator -> Code -> Bool
 hasAxis a Code{..} = M.member a codeAxes
-hasAxis a _ = False
+hasAxis _ _ = False
 
 getAxis :: AxisDesignator -> Code -> Maybe Double
 getAxis a Code{..} = M.lookup a codeAxes
 getAxis _ _ = Nothing
 
 getAxes :: [AxisDesignator] -> Code -> [Maybe Double]
-getAxes as c@Code{..} = map (\a-> getAxis a c) as
-getAxes _ _ = []
+getAxes as c = map (\a-> getAxis a c) as
 
 getAxesToList :: Code -> [(AxisDesignator, Double)]
 getAxesToList Code{..} = M.toList codeAxes
@@ -67,11 +65,12 @@ hasE = hasAxis E
 -- | True if 'Code' contains parameter with 'ParamDesignator'
 hasParam :: ParamDesignator -> Code -> Bool
 hasParam p Code{..} = M.member p codeParams
-hasParam a _ = False
+hasParam _ _ = False
 
 -- | Get parameter if defined
 getParam :: ParamDesignator -> Code -> Maybe Double
 getParam p Code{..} = M.lookup p codeParams
+getParam _ _ = Nothing
 
 -- | True if 'Code' contains feedrate parameter (e.g. G0 F3000)
 hasFeedrate :: Code -> Bool
@@ -103,19 +102,20 @@ replaceCode newcode c = num newcode c
 
 -- | Replace axis with 'AxisDesignator' in 'Code' returning new 'Code'
 replaceAxis :: AxisDesignator -> Double -> Code -> Code
-replaceAxis de val c@Code{..} | hasAxis de c = addReplaceAxis de val c
+replaceAxis de val c | hasAxis de c = addReplaceAxis de val c
 replaceAxis _ _ c = c
 
 -- | Apply function to axis specified by 'AxisDesignator'
 modifyAxis :: AxisDesignator -> (Double -> Double) -> Code -> Code
-modifyAxis de f c@Code{..} | hasAxis de c = addReplaceAxis de (f $ fromJust $ getAxis de c) c
+modifyAxis de f c | hasAxis de c = addReplaceAxis de (f $ fromJust $ getAxis de c) c
 modifyAxis _ _ c = c
 
 -- | Apply function to axes specified by '[AxisDesignator]'
 modifyAxes :: [AxisDesignator] -> (Double -> Double) -> Code -> Code
-modifyAxes axes f c = foldl (\c1  ax -> modifyAxis ax f c1) c axes
+modifyAxes axes' f c = foldl (\c1 ax -> modifyAxis ax f c1) c axes'
 
 -- | Test if Code has X and Y axes
+hasXY :: Code -> Bool
 hasXY c = hasAxis X c && hasAxis Y c
 
 -- | Apply function to X and Y axes
@@ -168,23 +168,23 @@ addReplaceE = addReplaceAxis E
 
 -- | Replace parameter with 'ParamDesignator' in 'Code' returning new 'Code'
 replaceParam :: ParamDesignator -> Double -> Code -> Code
-replaceParam de val c@Code{..} | hasParam de c = addReplaceParam de val c
+replaceParam de val c | hasParam de c = addReplaceParam de val c
 replaceParam _ _ c = c
 
 -- | Apply function to parameter with 'ParamDesignator'
 modifyParam :: ParamDesignator -> (Double -> Double) -> Code -> Code
-modifyParam de f c@Code{..} | hasParam de c = addReplaceParam de (f $ fromJust $ getParam de c) c
+modifyParam de f c | hasParam de c = addReplaceParam de (f $ fromJust $ getParam de c) c
 modifyParam _ _ c = c
 
 -- | Apply function to parameters specified by '[ParamDesignator]'
 modifyParams :: [ParamDesignator] -> (Double -> Double) -> Code -> Code
-modifyParams params f c = foldl (\c1 ax -> modifyParam ax f c1) c params
+modifyParams params' f c = foldl (\c1 ax -> modifyParam ax f c1) c params'
 
 -- | Apply function to parameters specified by '[ParamDesignator]'
 --
 -- Function gets 'ParameterDesignator' passed as its first argument
 modifyParamsWithKey :: [ParamDesignator] -> (ParamDesignator -> Double -> Double) -> Code -> Code
-modifyParamsWithKey params f c = foldl (\c1 ax -> modifyParam ax (f ax) c1) c params
+modifyParamsWithKey params' f c = foldl (\c1 ax -> modifyParam ax (f ax) c1) c params'
 
 -- | Replace or add parameter with 'ParamDesignator' in 'Code' returning new 'Code'
 addReplaceParam :: ParamDesignator -> Double -> Code -> Code
@@ -207,4 +207,5 @@ travelDistance Code{codeCls=(Just G), ..} = M.foldl (+) 0 codeAxes
 travelDistance _ = 0
 
 -- | Round `x` with specified precision
+roundprec :: (Integral a, RealFrac b, Fractional c) => a -> b -> c
 roundprec n x = (fromInteger $ round $ x * (10^n)) / (10.0^^n)

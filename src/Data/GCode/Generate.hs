@@ -8,8 +8,6 @@ module Data.GCode.Generate where
 import Data.GCode.Types
 import Data.GCode.RS274
 import Data.GCode.Utils
-import Data.GCode.Pretty
-import Data.Semigroup hiding (option)
 
 -- |Generate G Code
 g :: Code
@@ -52,20 +50,23 @@ xyz :: Double -> Double -> Double -> Code -> Code
 xyz xVal yVal zVal = x xVal . y yVal . z zVal
 
 -- |Set G0 and `x`, `y` coordinates
-movexy x y = move & xy x y
+movexy :: Double -> Double -> Code
+movexy xVal yVal = move & xy xVal yVal
 
 -- |Set `i`, `j` parameters for this Code
 ij :: Double -> Double -> Code -> Code
 ij iVal jVal = param I iVal . param J jVal
 
+arc :: Code
 arc = arcCW
 
 -- |Generate points on a rectangle
 rectangle :: (Num a, Num b) => a -> b -> [(a, b)]
-rectangle x y = [(0, 0), (x, 0), (x, y), (0, y), (0,0)]
+rectangle xv yv = [(0, 0), (xv, 0), (xv, yv), (0, yv), (0,0)]
 
 -- |Rotate X/Y coordinates by angle `by`
-rot by x y = (x * (cos by) - y * (sin by), y * (cos by) + x * (sin by))
+rot :: Floating b => b -> b -> b -> (b, b)
+rot by xv yv = (xv * (cos by) - yv * (sin by), yv * (cos by) + xv * (sin by))
 
 -- |Generate a list of points laying on a circle with radius `r`, divides circle in `steps` number of points
 circle :: (Floating b, Enum b) => b -> b -> [(b, b)]
@@ -76,6 +77,7 @@ circle' :: (Floating b, Enum b) => b -> b -> b -> [(b, b)]
 circle' rin r steps = map (\step -> rot (rin + step * 2*pi / steps) (r/2) 0) [1..steps]
 
 -- |As `circle` but origin is the same as end point
+closedCircle :: (Floating a, Enum a) => a -> a -> [(a, a)]
 closedCircle r steps = map (\step -> rot (step * 2*pi / steps) (r/2) 0) [1..(steps+1)]
 
 -- |Join list of GCodes with travel moves inbetween
@@ -93,7 +95,7 @@ travelCatDrill _ [] = []
 -- Prepends `up` GCode representing tool moving up before
 -- rapid move followed by `down` command to move tool down again.
 travel :: Code -> Code -> GCode -> GCode
-travel up down (x:rest) = [up, asRapidXY x, down, x] ++ rest
+travel up down (c:rest) = [up, asRapidXY c, down, c] ++ rest
 travel _ _ [] = []
 
 -- |Prepend drilling codes with tool up command and rapid moves
@@ -105,8 +107,9 @@ travelDrills up block = travel up emptyCode block
 
 -- |Take X and Y coordinates of this code
 -- and turn it into rapid move
+asRapidXY :: Code -> Code
 asRapidXY c@Code{} =
   case getAxes [X,Y] c of
-     [Just x, Just y] -> rapid & xy x y
+     [Just xv, Just yv] -> rapid & xy xv yv
      _ -> c
-asRapidXY x = x
+asRapidXY c = c

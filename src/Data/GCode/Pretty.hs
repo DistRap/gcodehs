@@ -18,16 +18,16 @@ module Data.GCode.Pretty(
   , ppAxesMap
   ) where
 
-import Data.ByteString.Char8 (pack, unpack)
-import qualified Data.Text as T
-import qualified Data.Map.Strict as M
-import Data.Maybe
+import Data.Map (Map)
+import Data.ByteString (ByteString)
 
-import Text.PrettyPrint.ANSI.Leijen
+import qualified Data.ByteString.Char8
+import qualified Data.Double.Conversion.Text
+import qualified Data.Map
+import qualified Data.Text
+
 import Data.GCode.Types
-import Data.GCode.Utils
-
-import Data.Double.Conversion.Text
+import Text.PrettyPrint.ANSI.Leijen
 
 -- | Pretty-print 'GCode' using colors
 ppGCode :: GCode -> String
@@ -48,24 +48,29 @@ ppGCodeLineCompact = ppGCodeLineStyle defaultStyle
 -- | Pretty-print 'GCode' with specified `Style`
 ppGCodeStyle :: Style -> GCode -> String
 ppGCodeStyle style res = displayS ((renderer style) (ppGCode' style res)) ""
-  where renderer style | styleColorful style == True = renderPretty 0.4 80
+  where renderer style' | styleColorful style' == True = renderPretty 0.4 80
         renderer _ =  renderCompact
 
 -- | Pretty-print single 'Code' with specified `Style`
 ppGCodeLineStyle :: Style -> Code -> String
 ppGCodeLineStyle style res = displayS ((renderer style) (ppCode style res)) ""
-  where renderer style | styleColorful style == True = renderPretty 0.4 80
+  where renderer style' | styleColorful style' == True = renderPretty 0.4 80
         renderer _ =  renderCompact
 
+ppList :: (a -> Doc) -> [a] -> Doc
 ppList pp x = hsep $ map pp x
 
+ppGCode' :: Style -> [Code] -> Doc
 ppGCode' style code = (vsep $ map (ppCode style) code) <> hardline
 
+ppMaybe :: (t -> Doc) -> Maybe t -> Doc
 ppMaybe pp (Just x) = pp x
-ppMaybe pp Nothing = empty
+ppMaybe _  Nothing = empty
 
+ppMaybeClass :: Maybe Class -> Doc
 ppMaybeClass = ppMaybe ppClass
 
+ppClass :: Class -> Doc
 ppClass G           = yellow $ text "G"
 ppClass M           = red $ text "M"
 ppClass T           = magenta $ text "T"
@@ -73,17 +78,25 @@ ppClass PStandalone = red $ text "P"
 ppClass FStandalone = red $ text "F"
 ppClass SStandalone = red $ text "S"
 
-ccMaybes (Just cls) (Just num) = cc cls num
+ccMaybes :: (Eq a, Num a) => Maybe Class -> Maybe a -> Doc -> Doc
+ccMaybes (Just cls') (Just num') = cc cls' num'
 ccMaybes _ _ = id
 
+cc :: (Eq a, Num a) => Class -> a -> Doc -> Doc
 cc G 0 = dullyellow
 cc G 1 = yellow
 cc _ _ = red
 
+ppAxis :: Style -> (AxisDesignator, Double) -> Doc
 ppAxis style (des, val) =
        bold (axisColor des $ text $ show des)
-    <> cyan (text $ T.unpack $ toFixed (stylePrecision style) val)
+    <> cyan (
+          text
+        $ Data.Text.unpack
+        $ Data.Double.Conversion.Text.toFixed (stylePrecision style) val
+        )
 
+axisColor :: AxisDesignator -> Doc -> Doc
 axisColor X = red
 axisColor Y = green
 axisColor Z = yellow
@@ -93,31 +106,43 @@ axisColor C = blue
 axisColor E = magenta
 axisColor _ = id
 
+ppAxes :: Style -> [(AxisDesignator, Double)] -> Doc
 ppAxes style x = ppList (ppAxis style) x
 
-ppAxesMap style x = ppList (ppAxis style) (M.toList x)
+ppAxesMap :: Style -> Map AxisDesignator Double -> Doc
+ppAxesMap style x = ppList (ppAxis style) (Data.Map.toList x)
 
+ppParam :: Show a => Style -> (a, Double) -> Doc
 ppParam style (des, val) =
        bold (blue $ text $ show des)
-    <> white (text $ T.unpack $ toFixed (stylePrecision style) val)
+    <> white (
+          text
+        $ Data.Text.unpack
+        $ Data.Double.Conversion.Text.toFixed (stylePrecision style) val
+        )
 
+ppParams :: Show a => Style -> [(a, Double)] -> Doc
 ppParams _ [] = empty
 ppParams style x = space <> ppList (ppParam style) x
 
+ppComment :: ByteString -> Doc
 ppComment "" = empty
 ppComment  c = space <> ppComment' c
-ppComment' "" = empty
-ppComment' c = dullwhite $ parens $ text $ unpack c
 
+ppComment' :: ByteString -> Doc
+ppComment' "" = empty
+ppComment' c = dullwhite $ parens $ text $ Data.ByteString.Char8.unpack c
+
+ppCode :: Style -> Code -> Doc
 ppCode style Code{..} =
        ccMaybes codeCls codeNum ( bold $ ppMaybeClass codeCls)
     <> ccMaybes codeCls codeNum ( ppMaybe (text . show) codeNum)
     <> ppMaybe (\x -> (text ".") <> (text $ show x)) codeSub
     <> ifNonEmpty (\x -> space <> ppAxesMap style x) codeAxes
-    <> ppParams style (M.toList codeParams)
+    <> ppParams style (Data.Map.toList codeParams)
     <> ppComment codeComment
 ppCode _ (Comment x) = ppComment' x
-ppCode _ (Other x) = dullred $ text $ unpack x
+ppCode _ (Other x) = dullred $ text $ Data.ByteString.Char8.unpack x
 ppCode _ (Empty) = empty
 {-# INLINE ppCode #-}
 

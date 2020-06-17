@@ -10,8 +10,8 @@ import Data.GCode.RS274.Types
 import Data.GCode.RS274 (codeFromName)
 
 import Control.Monad.Trans.Writer.Lazy
-import Control.Applicative
 import Data.Semigroup hiding (option)
+
  -- this gives us someCode and someCode' shortcuts generated from RS274/Types.hs
 -- so we can write
 -- > myP = prog $ do

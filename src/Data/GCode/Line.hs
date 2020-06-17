@@ -40,7 +40,7 @@ data Line = Line
 
 -- | Pretty print `Line`
 prettyLine :: Style -> Line -> String
-prettyLine style' x = displayS ((renderer style') (ppLine style' x)) ""
+prettyLine style x = displayS ((renderer style) (ppLine style x)) ""
   where renderer style' | styleColorful style' == True = renderPretty 0.4 80
         renderer _ =  renderCompact
 

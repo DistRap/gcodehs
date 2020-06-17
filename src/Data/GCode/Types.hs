@@ -44,11 +44,8 @@ module Data.GCode.Types (
 import Data.ByteString (ByteString)
 import Data.Map (Map)
 
-import qualified Data.ByteString
 import qualified Data.Char
 import qualified Data.Map
-import qualified Data.Text
-import qualified Data.Text.Encoding
 
 -- | Code class
 data Class =
@@ -60,6 +57,7 @@ data Class =
   | SStandalone -- ^ Stand-alone S-code
   deriving (Show, Enum, Eq, Ord)
 
+allClasses :: [Class]
 allClasses = [G, M, T, PStandalone, FStandalone, SStandalone]
 
 -- | Axis letter
@@ -77,6 +75,7 @@ data AxisDesignator =
   | L
   deriving (Show, Enum, Eq, Ord)
 
+allAxisDesignators :: [AxisDesignator]
 allAxisDesignators = [X, Y, Z, A, B, C, U, V, W, E, L]
 
 -- | Return `Axes` with each known at zero position
@@ -95,9 +94,13 @@ data ParamDesignator =
   | K -- ^ Z offset for arcs
   deriving (Show, Enum, Eq, Ord)
 
+allParamDesignators :: [ParamDesignator]
 allParamDesignators = [S, P, F, R, I, J, K]
 
+asChars :: Show a => [a] -> [Char]
 asChars types = map ((!! 0) . show) types
+
+fromChar :: Show a => Char -> [a] -> Maybe a
 fromChar c types = Data.Map.lookup (Data.Char.toUpper c)
   $ Data.Map.fromList (zip (asChars types) types)
 
@@ -169,6 +172,7 @@ comment :: ByteString -> Code -> Code
 comment x c = c { codeComment = x}
 
 -- code & num 10 & comment "& example"
+(&) :: a -> (a -> c) -> c
 (&) = flip ($)
 
 emptyCode :: Code
@@ -191,4 +195,5 @@ data Style =
 defaultPrec :: Int
 defaultPrec = 6
 
+defaultStyle :: Style
 defaultStyle = Style defaultPrec False

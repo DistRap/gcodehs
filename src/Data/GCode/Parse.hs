@@ -1,20 +1,25 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
+
 {-| GCode parsing functions
 -}
 
-{-# LANGUAGE OverloadedStrings #-}
 module Data.GCode.Parse (parseGCode, parseGCodeLine, parseOnlyGCode) where
 
 import Data.GCode.Types
 
-import Data.Char (toLower)
-import Data.Maybe (fromJust)
-import Prelude hiding (take, takeWhile, mapM)
 import Control.Applicative
-import qualified Data.ByteString as B
-import Data.Attoparsec.ByteString.Char8
-import qualified Data.Map.Strict as M
 
-import Data.Either (lefts, rights)
+import Prelude hiding (take, takeWhile, mapM)
+import Data.Attoparsec.ByteString.Char8
+
+import Data.ByteString (ByteString)
+
+import qualified Data.ByteString
+import qualified Data.Char
+import qualified Data.Either
+import qualified Data.Map
+import qualified Data.Maybe
 
 -- |Parse single line of G-code into 'Code'
 parseGCodeLine :: Parser Code
@@ -25,33 +30,39 @@ parseGCode :: Parser GCode
 parseGCode = many1 parseGCodeLine
 
 -- |Parse lines of G-code returning either parsing error or 'GCode'
-parseOnlyGCode :: B.ByteString -> Either String GCode
+parseOnlyGCode :: ByteString -> Either String GCode
 parseOnlyGCode = parseOnly parseGCode
 
-
+lskip :: Parser ()
 lskip = skipWhile (\x -> x == ' ' || x == '\t')
-between open close p = do{ open; x <- p; close; return x }
+
+between :: Monad m => m a1 -> m a2 -> m b -> m b
+between open close p = do { _ <- open; x <- p; _ <- close; return x }
 
 isEndOfLineChr :: Char -> Bool
 isEndOfLineChr '\n' = True
 isEndOfLineChr '\r' = True
 isEndOfLineChr _ = False
 
+parseLead :: Parser Class
 parseLead = do
-    a <- satisfy $ inClass $ (asChars allClasses) ++ (map toLower $ asChars allClasses)
-    return $ fromJust $ toCodeClass a
+    a <- satisfy $ inClass $ (asChars allClasses) ++ (map Data.Char.toLower $ asChars allClasses)
+    return $ Data.Maybe.fromJust $ toCodeClass a
 {-# INLINE parseLead #-}
 
+parseAxisDes :: Parser AxisDesignator
 parseAxisDes = do
     a <- satisfy $ inClass $ asChars allAxisDesignators
-    return $ fromJust $ toAxis a
+    return $ Data.Maybe.fromJust $ toAxis a
 {-# INLINE parseAxisDes #-}
 
+parseParamDes :: Parser ParamDesignator
 parseParamDes = do
     a <- satisfy $ inClass $ asChars allParamDesignators
-    return $ fromJust $ toParam a
+    return $ Data.Maybe.fromJust $ toParam a
 {-# INLINE parseParamDes #-}
 
+parseParamOrAxis :: Parser (Either (AxisDesignator, Double) (ParamDesignator, Double))
 parseParamOrAxis = do
     lskip
     ax <- option Nothing (Just <$> parseAxisDes)
@@ -61,44 +72,48 @@ parseParamOrAxis = do
           f <- double
           return $ Left (val, f)
       Nothing -> do
-          param <- parseParamDes
+          paramDes <- parseParamDes
           lskip
           f <- double
-          return $ Right (param, f)
+          return $ Right (paramDes, f)
 
 parseAxesParams :: Parser (Axes, Params)
 parseAxesParams = do
     a <- many parseParamOrAxis
-    return (M.fromList $ lefts a, M.fromList $ rights a)
+    return (Data.Map.fromList $ Data.Either.lefts a, Data.Map.fromList $ Data.Either.rights a)
 {-# INLINE parseAxesParams #-}
 
-
+parseCode :: Parser Code
 parseCode = do
-    lead <- optional parseLead
-    gcode <- optional decimal
-    subcode <- optional (char '.' *> decimal)
+    codeCls <- optional parseLead
+    codeNum <- optional decimal
+    codeSub <- optional (char '.' *> decimal)
     lskip
-    (axes, params) <- parseAxesParams
+    (codeAxes, codeParams) <- parseAxesParams
     lskip
-    comment <- option "" $ between lskip lskip parseComment'
-    let c = Code lead gcode subcode axes params comment
+    codeComment <- option "" $ between lskip lskip parseComment'
+    let c = Code{..}
     if c == emptyCode
       then return $ Empty
       else return c
 
+parseComment' :: Parser ByteString
 parseComment' = do
     t <- many $ between (lskip *> char '(') (char ')' <* lskip) $ takeWhile1 (/=')')
     -- semiclone prefixed comments
     semisep <- option "" $ char ';' *> takeWhile (not . isEndOfLineChr)
     rest <- takeWhile (not . isEndOfLineChr)
-    return $ B.concat $ t ++ [semisep, rest]
+    return $ Data.ByteString.concat $ t ++ [semisep, rest]
 
+parseComment :: Parser Code
 parseComment = Comment <$> parseComment'
 
+parseOther :: Parser Code
 parseOther = do
     a <- takeWhile (not . isEndOfLineChr)
     return $ Other a
 
+parseCodeParts :: Parser Code
 parseCodeParts =
            parseCode
       <|>  parseOther

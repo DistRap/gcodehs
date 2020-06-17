@@ -4,15 +4,17 @@
 module Data.GCode.Generate.Examples where
 
 import Data.GCode
-import Data.GCode.RS274
 import Data.GCode.Generate
+import Data.GCode.RS274
 
+allExamples :: [(String, GCode)]
 allExamples = [
     ("encoder_wheel_drilling", fst $ encoderWheel)
   , ("encoder_wheel_milling",  snd $ encoderWheel)
   , ("rectangle10x20",         rectangle10mm20mm)
   ]
 
+preamble :: [Code]
 preamble = [
     unitsPerMinute
   , absolute
@@ -23,21 +25,35 @@ preamble = [
   , dwell & param P 10
   ]
 
+postamble :: [Code]
 postamble = [
     spindleStop
   , coolantStop
   , programEnd
   ]
 
+returnZ :: Double
 returnZ = 1
-safeZ   = 2
-workZ   = (-2)
+
+safeZ :: Double
+safeZ  = 2
+
+workZ :: Double
+workZ  = (-2)
+
+rapidFeedrate :: Double
 rapidFeedrate = 250
+
+downFeedrate :: Double
 downFeedrate = 150
 
+up :: Code
 up   = rapid & z safeZ & feed rapidFeedrate
+
+down :: Code
 down = move  & z workZ & feed downFeedrate
 
+program :: [Code] -> [Code]
 program code = preamble ++ code ++ postamble
 
 rectangle10mm20mm :: GCode
@@ -56,7 +72,7 @@ encoderWheel =
         drillPoints      = circle encoderRadius encoderSteps
         drillPointsInner = circle' (2*pi/360 * (360 / 200) * 1.5) encoderRadiusInner encoderSteps
 
-        drill x y = drillingCycle & xyz x y workZ & feed 250 & param R returnZ
+        drill xv yv = drillingCycle & xyz xv yv workZ & feed 250 & param R returnZ
         drillBlocks = [ map (uncurry drill) drillPoints
                       , map (uncurry drill) drillPointsInner ]
         -- milling
@@ -64,7 +80,7 @@ encoderWheel =
         anchorPositions = circle (30) 4
 
         anchors = travelCat up down $ map (\(xc, yc) ->
-                    map (\(x,y) -> movexy (xc + x) (yc + y)) anchor)
+                    map (\(xv, yv) -> movexy (xc + xv) (yc + yv)) anchor)
                     anchorPositions
 
         encInner = circle (10.4 - endmillRadius) 360

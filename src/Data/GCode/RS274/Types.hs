@@ -12,6 +12,7 @@ data GCodeDef = GCodeDef
   , defHelp :: String
   } deriving (Show, Eq, Ord)
 
+defGCD :: GCodeDef
 defGCD = GCodeDef {
     defCls = Nothing
   , defNum = Nothing
@@ -22,16 +23,29 @@ defGCD = GCodeDef {
   }
 
 -- utils for creating GCodeDefs
+defG :: GCodeDef
 defG = defGCD { defCls = Just G }
+
+defM :: GCodeDef
 defM = defGCD { defCls = Just M }
+
+g :: Int -> RS274Name -> GCodeDef
 g x n = defG { defNum = Just x , defName = n }
+
+m :: Int -> RS274Name -> GCodeDef
 m x n = defM { defNum = Just x , defName = n }
+
+gsub :: Int -> Int -> RS274Name -> GCodeDef
 gsub x s n = (g x n) { defSub = Just s }
+
+msub :: Int -> Int -> RS274Name -> GCodeDef
 msub x s n = (m x n) { defSub = Just s }
 
+-- | Add help text to `GCodeDef`
+help :: String -> GCodeDef -> GCodeDef
 help txt x = x {defHelp = txt }
 
--- turn `GCodeDef` into `Code`
+-- | Turn `GCodeDef` into `Code`
 toCode :: GCodeDef -> Code
 toCode x = emptyCode { codeCls = defCls x
                      , codeNum = defNum x
@@ -167,6 +181,7 @@ data RS274Group =
 
 -- G-Codes
 
+groupMotion :: [GCodeDef]
 groupMotion = makeGroup Motion [
     g 0 Rapid
       & help "Rapid move"
@@ -192,6 +207,7 @@ groupMotion = makeGroup Motion [
       & help "Straight probe"
   ]
 
+groupPlane :: [GCodeDef]
 groupPlane = makeGroup Plane [
     g 17 XYPlane
       & help "Select XY plane (default)"
@@ -207,6 +223,7 @@ groupPlane = makeGroup Plane [
       & help "Select VW plane"
   ]
 
+groupUnits :: [GCodeDef]
 groupUnits = makeGroup Units [
     g 20 Inches
       & help "Set units to inches"
@@ -214,6 +231,7 @@ groupUnits = makeGroup Units [
       & help "Set units to millimeters"
   ]
 
+groupCutterRadius :: [GCodeDef]
 groupCutterRadius = makeGroup CutterRadius [
     g 40      CutterCompensationOff
   , g 41      CutterCompensationLeft
@@ -222,6 +240,7 @@ groupCutterRadius = makeGroup CutterRadius [
   , gsub 42 1 CutterCompensationDynamicRight
   ]
 
+groupToolLengthOffset :: [GCodeDef]
 groupToolLengthOffset = makeGroup ToolLengthOffset [
     g 43      ToolLength
       & help "Enables tool length compensation"
@@ -232,6 +251,7 @@ groupToolLengthOffset = makeGroup ToolLengthOffset [
       & help "Cancel tool length compensation"
   ]
 
+groupCycles :: [GCodeDef]
 groupCycles = makeGroup Cycles [
     g 73 DrillingCycleCB
   , g 76 ThreadingCycle
@@ -243,6 +263,7 @@ groupCycles = makeGroup Cycles [
   , g 89 BoringCycleDwell
   ]
 
+groupDistance :: [GCodeDef]
 groupDistance = makeGroup Distance [
     g 90 Absolute
       & help "Absolute distance mode"
@@ -250,6 +271,7 @@ groupDistance = makeGroup Distance [
       & help "Incremental distance mode"
   ]
 
+groupArcDistance :: [GCodeDef]
 groupArcDistance = makeGroup ArcDistance [
     gsub 90 1 ArcAbsolute
       & help "Absolute distance mode for I, J & K offsets"
@@ -257,11 +279,13 @@ groupArcDistance = makeGroup ArcDistance [
       & help "Incremental distance mode for I, J & K offsets"
   ]
 
+groupLatheDiameterMode :: [GCodeDef]
 groupLatheDiameterMode = makeGroup LatheDiameterMode [
     g 7 LatheDiameter
   , g 8 LatheRadius
   ]
 
+groupFeedRateMode :: [GCodeDef]
 groupFeedRateMode = makeGroup FeedRateMode [
     g 93 InverseTime
       & help "Iverse time feed rate mode, move should be completed in 1/F minutes"
@@ -274,6 +298,7 @@ groupFeedRateMode = makeGroup FeedRateMode [
 
 -- mixed M/G
 
+groupSpindleControl :: [GCodeDef]
 groupSpindleControl = makeGroup SpindleControl [
     m 3  SpindleCW
       & help "Start the spindle clockwise at the S speed"
@@ -289,6 +314,7 @@ groupSpindleControl = makeGroup SpindleControl [
 
 -- M-Codes
 
+groupStopping :: [GCodeDef]
 groupStopping = makeGroup Stopping [
     m 0 Pause
       & help "Pause a running program temporarily"
@@ -302,6 +328,7 @@ groupStopping = makeGroup Stopping [
       & help "Exchange pallet shuttles and then pause a running program temporarily"
   ]
 
+groupCoolantControl :: [GCodeDef]
 groupCoolantControl = makeGroup CoolantControl [
     m 7 CoolantMist
       & help "Turn mist coolant on"
@@ -312,6 +339,7 @@ groupCoolantControl = makeGroup CoolantControl [
   ]
 
 -- non-modal codes
+groupNonModal :: [GCodeDef]
 groupNonModal = makeGroup NonModal [
     m 6 ToolChange
       & help "Stop machine and prompt for tool change"
@@ -338,6 +366,7 @@ groupNonModal = makeGroup NonModal [
       & help "Set the G92 offsets to the values saved in parameters 5211 - 5219"
   ]
 
+groupOtherModal :: [GCodeDef]
 groupOtherModal = makeGroup OtherModal [
     defGCD { defCls = Just FStandalone }
       & help "Set feed rate"
@@ -361,7 +390,7 @@ groupOtherModal = makeGroup OtherModal [
 
 -- 3D printer specific
 
-
+groupExtruder :: [GCodeDef]
 groupExtruder = makeGroup Extruder [
     m 82 ExtruderAbsolute
       & help "Interpret extrusion parameters as absolution positions"
@@ -369,6 +398,7 @@ groupExtruder = makeGroup Extruder [
       & help "Interpret extrusion parameters as relative positions"
   ]
 
+groupHeating :: [GCodeDef]
 groupHeating = makeGroup Heating [
     m 104 SetExtruderTemperature
       & help "Set extruder temperature"
@@ -389,6 +419,7 @@ groupHeating = makeGroup Heating [
           ++ " This won't disable heaters and will continue the print job.")
   ]
 
+groupCooling :: [GCodeDef]
 groupCooling = makeGroup Cooling [
     m 106 FanOn
       & help "Enable fan"
@@ -396,6 +427,7 @@ groupCooling = makeGroup Cooling [
       & help "Disable fan"
   ]
 
+groupPrinterMisc :: [GCodeDef]
 groupPrinterMisc = makeGroup PrinterMisc [
     g 29 AutoBedLevel
       & help "Run automatic heated bed leveling"
@@ -407,6 +439,7 @@ groupPrinterMisc = makeGroup PrinterMisc [
       & help "Display a text message on LCD display"
   ]
 
+cncGroups :: [(RS274Group, [GCodeDef])]
 cncGroups = [
     (Motion           , groupMotion)
   , (Plane            , groupPlane)
@@ -425,6 +458,7 @@ cncGroups = [
   , (NonModal         , groupNonModal)
   ]
 
+printerGroups :: [(RS274Group, [GCodeDef])]
 printerGroups = [
     (Extruder    , groupExtruder)
   , (Heating     , groupHeating)
@@ -432,8 +466,12 @@ printerGroups = [
   , (PrinterMisc , groupPrinterMisc)
   ]
 
+allGroups :: [(RS274Group, [GCodeDef])]
 allGroups = cncGroups ++ printerGroups
 
+groupNames :: [RS274Group]
 groupNames = map fst allGroups
 
+-- | All `GCodeDef`s known to us
+allCodes :: [GCodeDef]
 allCodes = concatMap snd allGroups

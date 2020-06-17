@@ -2,10 +2,8 @@
 module Data.GCode.TH where
 
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
 
 import qualified Data.Char
-import qualified GHC.Base
 
 -- this walks constructors of a datatype
 -- and creates isXYZ checks and CodeMod constructors
@@ -15,6 +13,7 @@ import qualified GHC.Base
 --
 -- rapid :: Code
 -- rapid = codeFromName Rapid
+genShortcuts :: Name -> Q [Dec]
 genShortcuts names = do
   info <- reify names
   case info of
@@ -23,6 +22,7 @@ genShortcuts names = do
         a <- mapM genTests constructors
         b <- mapM genConstructors constructors
         return $ a ++ b
+    _ -> error "Unexpected reify input for genShortcuts"
 
   where
     genTests (NormalC name _bangs) = do
@@ -36,6 +36,7 @@ genShortcuts names = do
            (NormalB (InfixE (Just (VarE varName)) (VarE (mkName "codeIsRS274")) (Just (ConE name))))
            []
         ]
+    genTests _ = error "Unexpteced input for genTests"
 
     genConstructors (NormalC name _bangs) = do
       let
@@ -46,6 +47,7 @@ genShortcuts names = do
           (NormalB ( (VarE (mkName "codeFromName")) `AppE` (ConE name)) )
           []
         ]
+    genConstructors _ = error "Unexpteced input for genConstructors"
 
 -- this walks constructors of a datatype
 -- and creates constructors to be used in writer monad
@@ -60,6 +62,7 @@ genShortcuts names = do
 --
 -- We prefer variant with args as it seems to be more common
 -- to have GCodes with arguments than just standalone ones.
+genWriterEndos :: Name -> Q [Dec]
 genWriterEndos names = do
   info <- reify names
   case info of
@@ -68,6 +71,7 @@ genWriterEndos names = do
         a <- mapM genConstructors constructors
         b <- mapM genConstructorsArgs constructors
         return $ a ++ b
+    _ -> error "Unexpected reify input for genWriterEndos"
 
   where
     genConstructors (NormalC name _bangs) = do
@@ -79,6 +83,7 @@ genWriterEndos names = do
           (NormalB ( (VarE (mkName "generateName")) `AppE` (ConE name)) )
           []
         ]
+    genConstructors _ = error "Unexpteced input for genConstructors"
 
     genConstructorsArgs (NormalC name _bangs) = do
       endoName <- newName "x"
@@ -90,3 +95,4 @@ genWriterEndos names = do
           (NormalB (((VarE (mkName "generateNameArgs")) `AppE` (ConE name)) `AppE` (VarE endoName)) )
           []
         ]
+    genConstructorsArgs _ = error "Unexpteced input for genConstructorArgs"
