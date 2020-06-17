@@ -121,6 +121,23 @@ data RS274Name =
   | SpindleSpeedOverride
   | AdaptiveFeedControl
   | FeedStopControl
+  -- 3D printer specific
+  | ExtruderAbsolute
+  | ExtruderRelative
+  | SetExtruderTemperature
+  | GetExtruderTemperature
+  | SetExtruderTemperatureAndWait
+  | SetBedTemperature
+  | SetBedTemperatureAndWait
+  | SetChamberTemperature
+  | SetChamberTemperatureAndWait
+  | CancelWaitTemperature
+  | FanOn
+  | FanOff
+  | GetCurrentPosition
+  | DisplayMessage
+  | DisableActuators
+  | AutoBedLevel
  deriving (Eq, Ord, Show)
 
 data RS274Group =
@@ -140,6 +157,11 @@ data RS274Group =
   | OtherModal
   | NonModal
   | Unknown
+  -- 3D printer specific
+  | Extruder
+  | Heating
+  | Cooling
+  | PrinterMisc
  deriving (Eq, Ord, Show)
 
 
@@ -337,7 +359,55 @@ groupOtherModal = makeGroup OtherModal [
       & help "Feed stop control"
   ]
 
-allGroups = [
+-- 3D printer specific
+
+
+groupExtruder = makeGroup Extruder [
+    m 82 ExtruderAbsolute
+      & help "Interpret extrusion parameters as absolution positions"
+  , m 83 ExtruderRelative
+      & help "Interpret extrusion parameters as relative positions"
+  ]
+
+groupHeating = makeGroup Heating [
+    m 104 SetExtruderTemperature
+      & help "Set extruder temperature"
+  , m 105 GetExtruderTemperature
+      & help "Get current temperature of the selected extruder"
+  , m 109 SetExtruderTemperatureAndWait
+      & help "Set extruder temperature and wait for it to be reached"
+  , m 140 SetBedTemperature
+      & help "Set temperature of the heated bed"
+  , m 190 SetBedTemperatureAndWait
+      & help "Set heated bed temperature and wait for it to be reached"
+  , m 141 SetChamberTemperature
+      & help "Set temperature of the heated chamber"
+  , m 191 SetChamberTemperatureAndWait
+      & help "Set heated chamber and wait for it to be reached"
+  , m 108 CancelWaitTemperature
+      & help ("Stops waiting for temperature to be reached issued by M109, M190 or M191."
+          ++ " This won't disable heaters and will continue the print job.")
+  ]
+
+groupCooling = makeGroup Cooling [
+    m 106 FanOn
+      & help "Enable fan"
+  , m 107 FanOff
+      & help "Disable fan"
+  ]
+
+groupPrinterMisc = makeGroup PrinterMisc [
+    g 29 AutoBedLevel
+      & help "Run automatic heated bed leveling"
+  , m 84 DisableActuators
+      & help "Disable actuators, e.g. cut power to steppers"
+  , m 114 GetCurrentPosition
+      & help "Report current position of all axes and extruders"
+  , m 117 DisplayMessage
+      & help "Display a text message on LCD display"
+  ]
+
+cncGroups = [
     (Motion           , groupMotion)
   , (Plane            , groupPlane)
   , (Units            , groupUnits)
@@ -354,6 +424,15 @@ allGroups = [
   , (OtherModal       , groupOtherModal)
   , (NonModal         , groupNonModal)
   ]
+
+printerGroups = [
+    (Extruder    , groupExtruder)
+  , (Heating     , groupHeating)
+  , (Cooling     , groupCooling)
+  , (PrinterMisc , groupPrinterMisc)
+  ]
+
+allGroups = cncGroups ++ printerGroups
 
 groupNames = map fst allGroups
 
