@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+
 module Data.GCode.Monad where
 
 import Data.GCode.TH

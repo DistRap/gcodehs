@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+
 module Data.GCode.RS274 where
 
 import Data.GCode.TH
