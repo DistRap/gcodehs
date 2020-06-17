@@ -39,12 +39,15 @@ module Data.GCode.Types (
     , defaultStyle
     ) where
 
-import Data.Char                      (toUpper)
-import qualified Data.ByteString      as B
-import qualified Data.Text            as T
-import qualified Data.Text.Encoding   as TE
 
-import qualified Data.Map.Strict as M
+import Data.ByteString (ByteString)
+import Data.Map (Map)
+
+import qualified Data.ByteString
+import qualified Data.Char
+import qualified Data.Map
+import qualified Data.Text
+import qualified Data.Text.Encoding
 
 -- | Code class
 data Class =
@@ -90,7 +93,8 @@ data ParamDesignator =
 allParamDesignators = [S, P, F, R, I, J, K]
 
 asChars types = map ((!! 0) . show) types
-fromChar c types = M.lookup (toUpper c) $ M.fromList (zip (asChars types) types)
+fromChar c types = Data.Map.lookup (Data.Char.toUpper c)
+  $ Data.Map.fromList (zip (asChars types) types)
 
 -- |Convert 'Char' representation of a code to its 'Class'
 toCodeClass :: Char -> Maybe Class
@@ -105,16 +109,16 @@ toParam :: Char -> Maybe ParamDesignator
 toParam c = fromChar c allParamDesignators
 
 -- | Map of 'AxisDesignator' to 'Double'
-type Axes = M.Map AxisDesignator Double
+type Axes = Map AxisDesignator Double
 
 -- | Map of 'AxisDesignator' to pair of 'Double's indicating lower and upper limits of travel
-type Limits = M.Map AxisDesignator (Double, Double)
+type Limits = Map AxisDesignator (Double, Double)
 
 -- | Map of 'ParamDesignator' to 'Double'
-type Params = M.Map ParamDesignator Double
+type Params = Map ParamDesignator Double
 
 -- | Map of 'ParamDesignator' to pair of 'Double's indicating lower and upper limits of this parameter
-type ParamLimits = M.Map ParamDesignator (Double, Double)
+type ParamLimits = Map ParamDesignator (Double, Double)
 
 -- | List of 'Code's
 type GCode = [Code]
@@ -126,11 +130,11 @@ data Code =
       , codeSub :: Maybe Int        -- ^ Code subcode (1 in G92.1)
       , codeAxes :: Axes            -- ^ Code 'Axes'
       , codeParams :: Params        -- ^ Code 'Params'
-      , codeComment :: B.ByteString -- ^ Comment following this Code
+      , codeComment :: ByteString   -- ^ Comment following this Code
     }
-  | Comment B.ByteString        -- ^ Standalone comment
-  | Empty                       -- ^ Empty lines
-  | Other B.ByteString          -- ^ Parser unhandled lines
+  | Comment ByteString              -- ^ Standalone comment
+  | Empty                           -- ^ Empty lines
+  | Other ByteString                -- ^ Parser unhandled lines
   deriving (Show, Eq, Ord)
 
 
@@ -148,27 +152,28 @@ axes :: Axes -> Code -> Code
 axes x c = c { codeAxes = x}
 
 axis :: AxisDesignator -> Double -> Code -> Code
-axis des val c = c { codeAxes = M.insert des val $ codeAxes c }
+axis des val c = c { codeAxes = Data.Map.insert des val $ codeAxes c }
 
 params :: Params -> Code -> Code
 params x c = c { codeParams = x}
 
 param :: ParamDesignator -> Double -> Code -> Code
-param des val c = c { codeParams = M.insert des val $ codeParams c }
+param des val c = c { codeParams = Data.Map.insert des val $ codeParams c }
 
-comment :: B.ByteString -> Code -> Code
+comment :: ByteString -> Code -> Code
 comment x c = c { codeComment = x}
 
 -- code & num 10 & comment "& example"
 (&) = flip ($)
 
+emptyCode :: Code
 emptyCode = Code {
-    codeCls = Nothing
-  , codeNum = Nothing
-  , codeSub = Nothing
-  , codeAxes = M.empty
-  , codeParams = M.empty
-  , codeComment = ""
+    codeCls     = Nothing
+  , codeNum     = Nothing
+  , codeSub     = Nothing
+  , codeAxes    = mempty
+  , codeParams  = mempty
+  , codeComment = mempty
   }
 
 
