@@ -1,2 +1,3 @@
-{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc883" }:
-nixpkgs.haskell.packages.${compiler}.callCabal2nix "gcodehs" ./. { }
+{ nixpkgs ? import <nixpkgs> {}}:
+nixpkgs.haskell.lib.buildFromSdist
+  (nixpkgs.haskellPackages.callCabal2nix "gcodehs" ./. { })
