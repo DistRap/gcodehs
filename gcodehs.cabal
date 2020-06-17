@@ -22,6 +22,7 @@ library
                      , Data.GCode.Generate.Examples
                      , Data.GCode.Generate.ExamplesMonad
                      , Data.GCode.Eval
+                     , Data.GCode.Line
                      , Data.GCode.Monad
                      , Data.GCode.Types
                      , Data.GCode.Parse
