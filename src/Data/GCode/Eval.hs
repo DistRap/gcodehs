@@ -17,21 +17,21 @@ import Data.GCode.RS274.Types
 import Data.GCode.Utils
 import Data.GCode.Canon
 
--- |Test if 'Code' belongs to group g
+-- | Test if 'Code' belongs to group g
 inGroup c g = any (\x -> x c) g
 
--- |Test if 'Code' belongs to any group
+-- | Test if 'Code' belongs to any group
 known c = M.member (decimate c) codesToDefs
 
--- |Update modal groups according to Code `c`
+-- | Update modal groups according to Code `c`
 updateModals current c = case M.lookup (decimate c) codesToGroups of
   Nothing -> current
   Just group -> M.insert group c current
 
--- |Append axes from `cfrom` to `cto` Code
+-- | Append axes from `cfrom` to `cto` Code
 appendAxes cto cfrom = cto & (axes $ appendOnlyAxes (codeAxes cto) (codeAxes cfrom))
 
--- |Walk GCode adding missing axes coordinates according to previous moves
+-- | Walk GCode adding missing axes coordinates according to previous moves
 --
 -- For example
 -- G0 X1
@@ -60,21 +60,21 @@ totalize = totalize' defaultModals
       let (newCode, newModals) = updateCodeAndModals x modals
       in (newCode:totalize' newModals rest)
 
--- |Interpreter state
+-- | Interpreter state
 data IPState = IPState {
     ipModalGroups :: M.Map RS274Group Code
   , ipPosition :: Axes
   , ipLine :: Integer
   } deriving (Eq, Show, Ord)
 
--- |Default modals
+-- | Default modals
 defaultModals = M.fromList [
     (Units      , millimeters)
   , (Distance   , absolute)
   , (ArcDistance, absolute)
   ]
 
--- |Create new interpreter state
+-- | Create new interpreter state
 newState = IPState {
     ipModalGroups = defaultModals
   , ipPosition = M.empty
@@ -112,15 +112,15 @@ step is@IPState{..} (x@Code{}:xs) =
 -- handle empty/comments/other
 step is (x:xs) = (Nothing, is, xs)
 
--- |Fully evaluate GCode
+-- | Fully evaluate GCode
 eval :: GCode -> ([Code], IPState)
 eval = evalWith (\res state -> res)
 
--- |Evaluate GCode to canonnical representation
+-- | Evaluate GCode to canonnical representation
 evalCanon :: GCode -> ([LineNumbered Canon], IPState)
 evalCanon = evalWith toCanonLines
 
--- |Evaluate GCode and and apply function `f` to each successfuly
+-- | Evaluate GCode and and apply function `f` to each successfuly
 -- evaluated Code
 evalWith :: (Code -> IPState -> a) -> GCode -> ([a], IPState)
 evalWith f gcode = let (accumulator, resultState, []) = go initState in (catMaybes accumulator, resultState)
@@ -131,10 +131,10 @@ evalWith f gcode = let (accumulator, resultState, []) = go initState in (catMayb
       let (result, steppedState, rest) = step st codes
           mapped = case result of
             Nothing -> Nothing
-            Just x -> Just $ f x steppedState
+            Just x -> f x steppedState
       in go (acc ++ [mapped], steppedState, rest)
 
--- |Evaluate GCode and return each evaluation step
+-- | Evaluate GCode and return each evaluation step
 evalSteps gcode = go initState
   where
     initState = ([], newState, gcode)
@@ -151,7 +151,7 @@ toMillimeters modals x | codeActive millimeters modals = x
 toMillimeters modals x | codeActive inches modals = x & axes (M.map (*25.4) (codeAxes x))
                                                       & modifyParams [F, R, I, J, K] (*25.4)
 toMillimeters modals x | otherwise = error "Neither millimeters nor inches set"
- 
+
 -- | Convert all motion coordinates from relative to absolute
 toAbsolute modals x | codeActive relative modals && isMotion x =
   case M.lookup Motion modals of -- motion group
@@ -174,15 +174,15 @@ toAbsoluteArcs modals x | codeActive arcRelative modals && isMotion x =
     addRespective _    _ x | otherwise      = x
 toAbsoluteArcs modals x | otherwise = x
 
--- |Return True if `code` is active (present) in `modals`
+-- | Return True if `code` is active (present) in `modals`
 codeActive code modals = case M.lookup (decimate code) codesToGroups of
   Just group -> M.lookup group (M.map decimate modals) == (Just $ decimate code)
   Nothing -> False
 
--- |Return True if `code` is a motion comand
+-- | Return True if `code` is a motion comand
 isMotion = flip codeInGroup Motion
 
--- |Update `code` according to current `modals`
+-- | Update `code` according to current `modals`
 -- then update `modals` with a resulting code
 --
 -- Return updated code and modals
@@ -197,7 +197,7 @@ updateCodeAndModals code modals =
       newModals = updateModals modals newCode
   in (newCode, newModals)
 
--- |Take current motion group modal code and update this motion code
+-- | Take current motion group modal code and update this motion code
 -- with missing coordinates of the stored one
 updateFromCurrentModals modals x | isMotion x = do
   case M.lookup Motion modals of -- motion group
@@ -205,11 +205,11 @@ updateFromCurrentModals modals x | isMotion x = do
     (Just e) -> x & (axes $ appendOnlyAxes (codeAxes x) (codeAxes e))
 updateFromCurrentModals _ x | otherwise = x
 
--- |Return True if this code contains only coordinates
+-- | Return True if this code contains only coordinates
 incomplete Code{codeCls=Nothing, codeNum=Nothing, ..} | (M.null codeAxes /= True) = True
 incomplete _ = False
 
--- |Update incomplete motion Code with the stored one
+-- | Update incomplete motion Code with the stored one
 updateIncompleteFromCurrentModals modals x | incomplete x = do
   case M.lookup Motion modals of -- motion group
     Nothing -> x
@@ -220,19 +220,19 @@ updateIncompleteFromCurrentModals modals x | incomplete x = do
       ]) x
 updateIncompleteFromCurrentModals _ x | otherwise = x
 
--- |Update axes that aren't defined in target
+-- | Update axes that aren't defined in target
 appendOnlyAxes target from = M.union target missingOnly
   where missingOnly = M.difference from target
 
--- |Update (replace) `target` axes with `from` axes
+-- | Update (replace) `target` axes with `from` axes
 updateAxes target from = M.union from target -- union in this order so `from` axes are preferred
 
--- |Update `Limits` from this `Code`
+-- | Update `Limits` from this `Code`
 updateLimitsCode :: Limits -> Code -> Limits
 updateLimitsCode s Code{..} = updateLimits s codeAxes
 updateLimitsCode s _ = s
 
--- |Update `Limits` from `Axes`
+-- | Update `Limits` from `Axes`
 updateLimits :: Limits -> Axes -> Limits
 updateLimits s = M.foldlWithKey adj s
   where

@@ -26,29 +26,29 @@ import Data.GCode.Utils
 
 import Data.Double.Conversion.Text
 
--- |Pretty-print 'GCode' using colors
+-- | Pretty-print 'GCode' using colors
 ppGCode :: GCode -> String
 ppGCode = ppGCodeStyle (defaultStyle { styleColorful = True })
 
--- |Pretty-print single 'Code' using colors
+-- | Pretty-print single 'Code' using colors
 ppGCodeLine :: Code -> String
 ppGCodeLine = ppGCodeLineStyle (defaultStyle { styleColorful = True })
 
--- |Pretty-print 'GCode' without colors
+-- | Pretty-print 'GCode' without colors
 ppGCodeCompact :: GCode -> String
 ppGCodeCompact = ppGCodeStyle defaultStyle
 
--- |Pretty-print single 'Code' without colors
+-- | Pretty-print single 'Code' without colors
 ppGCodeLineCompact :: Code -> String
 ppGCodeLineCompact = ppGCodeLineStyle defaultStyle
 
--- |Pretty-print 'GCode' with specified `Style`
+-- | Pretty-print 'GCode' with specified `Style`
 ppGCodeStyle :: Style -> GCode -> String
 ppGCodeStyle style res = displayS ((renderer style) (ppGCode' style res)) ""
   where renderer style | styleColorful style == True = renderPretty 0.4 80
         renderer _ =  renderCompact
 
--- |Pretty-print single 'Code' with specified `Style`
+-- | Pretty-print single 'Code' with specified `Style`
 ppGCodeLineStyle :: Style -> Code -> String
 ppGCodeLineStyle style res = displayS ((renderer style) (ppCode style res)) ""
   where renderer style | styleColorful style == True = renderPretty 0.4 80
