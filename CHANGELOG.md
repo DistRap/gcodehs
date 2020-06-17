@@ -1,4 +1,4 @@
-# Version [0.1.2.0](https://github.com/distrap/gcodehs/compare/0.1.2.0...0.1.1.0) (2020-06-17)
+# Version [0.1.2.0](https://github.com/distrap/gcodehs/compare/0.1.1.0...0.1.2.0) (2020-06-17)
 
 * Changelog started. Previous release was `0.1.1.0`.
 
