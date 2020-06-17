@@ -13,7 +13,10 @@ module Data.GCode.Pretty(
   , ppGCodeCompact
   , ppGCodeLineCompact
   , ppGCodeStyle
-  , ppGCodeLineStyle) where
+  , ppGCodeLineStyle
+  , ppAxes
+  , ppAxesMap
+  ) where
 
 import Data.ByteString.Char8 (pack, unpack)
 import qualified Data.Text as T
@@ -90,8 +93,9 @@ axisColor C = blue
 axisColor E = magenta
 axisColor _ = id
 
-ppAxes _ [] = empty
-ppAxes style x = space <> ppList (ppAxis style) x
+ppAxes style x = ppList (ppAxis style) x
+
+ppAxesMap style x = ppList (ppAxis style) (M.toList x)
 
 ppParam style (des, val) =
        bold (blue $ text $ show des)
@@ -109,10 +113,16 @@ ppCode style Code{..} =
        ccMaybes codeCls codeNum ( bold $ ppMaybeClass codeCls)
     <> ccMaybes codeCls codeNum ( ppMaybe (text . show) codeNum)
     <> ppMaybe (\x -> (text ".") <> (text $ show x)) codeSub
-    <> ppAxes style (M.toList codeAxes)
+    <> ifNonEmpty (\x -> space <> ppAxesMap style x) codeAxes
     <> ppParams style (M.toList codeParams)
     <> ppComment codeComment
 ppCode _ (Comment x) = ppComment' x
 ppCode _ (Other x) = dullred $ text $ unpack x
 ppCode _ (Empty) = empty
 {-# INLINE ppCode #-}
+
+ifNonEmpty :: (Eq t, Monoid t)
+           => (t -> Doc)
+           -> t -> Doc
+ifNonEmpty _ x | x == mempty = empty
+ifNonEmpty f x | otherwise   = f x
