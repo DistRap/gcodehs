@@ -80,6 +80,7 @@ data ParamDesignator =
     S -- ^ S parameter - usually spindle RPM
   | P -- ^ P parameter
   | F -- ^ F parameter - usually feedrate
+  | H -- ^ H paramater - used by tool length offset
   | R -- ^ R parameter
   | I -- ^ X offset for arcs
   | J -- ^ Y offset for arcs
