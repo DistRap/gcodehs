@@ -18,6 +18,7 @@ library
   exposed-modules:     Data.GCode
                      , Data.GCode.Ann
                      , Data.GCode.Canon
+                     , Data.GCode.Canon.Convert
                      , Data.GCode.Generate
                      , Data.GCode.Generate.Examples
                      , Data.GCode.Generate.ExamplesMonad
