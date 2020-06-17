@@ -10,8 +10,11 @@ maintainer:          srk@48.io
 copyright:           2016 Richard Marko
 category:            Parsing
 build-type:          Simple
--- extra-source-files:
 cabal-version:       >=1.10
+extra-source-files:
+  CHANGELOG.md
+  README.md
+  LICENSE
 
 library
   ghc-options:         -Wall
