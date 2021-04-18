@@ -8,6 +8,7 @@ module Data.GCode.Canon where
 
 import Data.ByteString (ByteString)
 import Data.GCode.Types (Axes, zeroAxes)
+import Data.Map (Map)
 
 import qualified Data.Map
 
@@ -92,6 +93,7 @@ data Canon =
   | CancelWaitTemperature             -- ^ Cancel all temperature waits
   | LevelBed                          -- ^ Perform automated bed leveling
   -- Misc
+  | Yield -- or Await? or? for blocking cmd
   | DisableMotors Axes                -- ^ Disable power to motors
   | DisplayMessage ByteString         -- ^ Display a message, typically on LCD
   | Comment ByteString                -- ^ Just a comment
@@ -99,29 +101,76 @@ data Canon =
 
 -- | State of the Canon interpreter
 data CanonState = CanonState {
-    canonPosition     :: Axes  -- ^ Position
-  , canonTraverseRate :: Speed -- ^ Speed for travel moves
-  , canonFeedRate     :: Speed -- ^ Speed for machining moves
-  , canonPlane        :: Plane -- ^ Selected plane
+    canonPosition     :: Axes        -- ^ Position
+  , canonTraverseRate :: Speed       -- ^ Speed for travel moves
+  , canonFeedRate     :: Speed       -- ^ Speed for machining moves
+  , canonTraversing   :: Bool        -- ^ True if we are performing a travel move
+  , canonPlane        :: Plane       -- ^ Selected plane
+  , canonLastComment  :: ByteString  -- ^ Last comment we saw
+  -- XXX: needs indexes and power
+  , canonFans         :: Bool        --
+  , canonHeaters      :: Map Heater Double
+-- XXX: needs indexes and power??
+, canonCooling      :: Bool        --
+  , canonFinished     :: Bool        -- True if we are done
   } deriving (Show, Eq, Ord)
+
+data WaitingFor = WaitingHeaters | WaitingSpindle -- | WaitingEverything
+  deriving (Show, Eq, Ord)
+
+--cancelWaits :: WaitingFor -> CanonState -> CanonState
+--cancelWaits for s = case (canonWaiting s) of
+--  (Just w) | w == for -> s { canonWaiting = Nothing }
 
 -- | Initial state of the Canon interpreter
 initCanonState :: CanonState
 initCanonState = CanonState {
     canonPosition     = zeroAxes
+  , canonTraversing   = True
   , canonTraverseRate = 0
   , canonFeedRate     = 0
   , canonPlane        = XY
+  , canonLastComment  = mempty
+  , canonFans         = False
+  , canonHeaters      = mempty
+  , canonCooling      = False
+  , canonFinished     = False
   }
 
 -- | Step Canon interpreter, returning new state
 stepCanon :: CanonState -> Canon -> CanonState
-stepCanon s (StraightTraverse a) = s { canonPosition = Data.Map.union a (canonPosition s) }
-stepCanon s (StraightFeed a) = s { canonPosition = Data.Map.union a (canonPosition s) }
-stepCanon s (SetFeedRate r) = s { canonFeedRate = r }
+stepCanon s (StraightTraverse a) = s {
+    canonPosition = Data.Map.union a (canonPosition s)
+  , canonTraversing = True
+  }
+stepCanon s (StraightFeed a) = s {
+    canonPosition = Data.Map.union a (canonPosition s)
+  , canonTraversing = False
+  }
+stepCanon s (SetFeedRate r)     = s { canonFeedRate = r }
 stepCanon s (SetTraverseRate r) = s { canonTraverseRate = r }
-stepCanon s (SetCoords a) = s { canonPosition = Data.Map.union a (canonPosition s) }
-stepCanon s (PlaneSelect p) = s { canonPlane = p }
+stepCanon s (SetCoords a)       = s { canonPosition = Data.Map.union a (canonPosition s) }
+stepCanon s (PlaneSelect p)     = s { canonPlane = p }
+stepCanon s (Comment c)         = s { canonLastComment = c }
+stepCanon s (PauseSeconds x)    = s
+stepCanon s ProgramEnd    = s { canonFinished = True }
+
+stepCanon s (SetTemperature heater value) = s { canonHeaters = Data.Map.insert heater value (canonHeaters s) }
+--stepCanon s CancelWaitTemperature = cancelWaits WaitingHeaters s
+stepCanon s _ = s
+-- TODO
+--stepCanon _s e@(StraightProbe _) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(ArcFeed _) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(SpindleStart _ _) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(SpindleStop) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(SpindleSpeed _) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(ToolChange) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(ToolSelect _) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(ToolLengthCompensation _) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(CoolantMist) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(CoolantFlood) = error $ "Don't know how to step " ++ show e
+--stepCanon _s e@(CoolantStop) = error $ "Don't know how to step " ++ show e
+--stepCanon s e = error $ "Don't know how to step " ++ show e
 
 -- | Fully eval list of `Canon` commands.
 --
