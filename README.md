@@ -37,3 +37,10 @@ or sourcing directly::
 ```bash
 source <(gcodehs --bash-completion-script `which gcodehs`)
 ```
+
+## Examples
+
+### Generating GCode
+
+* [with monoid](src/Data/GCode/Canon/Generate/Examples.hs)
+* [with monad](src/Data/GCode/Canon/Generate/ExamplesMonad.hs)
