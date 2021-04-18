@@ -73,6 +73,22 @@ executable gcodehs
                      , optparse-applicative
   default-language:    Haskell2010
 
+executable gcodehs-viewer
+  hs-source-dirs:      app
+  main-is:             Viewer.hs
+  build-depends:
+                       base
+                     , bytestring
+                     , containers
+                     , GPipe-Core >= 0.2.3
+                     , GPipe-GLFW4 >= 2.0
+                     , GLFW-b
+                     , gcodehs
+                     , pipes
+                     , linear
+  ghc-options:         -Wall -threaded
+  default-language:    Haskell2010
+
 test-suite gcodehs-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
