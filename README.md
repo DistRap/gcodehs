@@ -1,5 +1,9 @@
 # gcodehs
 
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/distrap/gcodehs/ci.yaml?branch=master)](https://github.com/distrap/gcodehs/actions/workflows/ci.yaml)
+[![Hackage version](https://img.shields.io/hackage/v/gcodehs.svg?color=success)](https://hackage.haskell.org/package/gcodehs)
+[![Dependencies](https://img.shields.io/hackage-deps/v/gcodehs?label=Dependencies)](https://packdeps.haskellers.com/feed?needle=gcodehs)
+
 ## Installing
 
 * `git clone https://github.com/distrap/gcodehs/`
